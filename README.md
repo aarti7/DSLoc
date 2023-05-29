@@ -19,7 +19,9 @@ A mobile node continuously transmits an unmodulated, complex sinusoidal wave at 
 
 
 
-
+SHOUT: 
+piping issues: measurements dropped.
+More robust signal reception.
 
 
 ### Data analysis
