@@ -170,7 +170,7 @@ def INFER_AND_plotall(tr_dict, trndmdl, trdf, vldf, trnsf, tsdf, dev, m, lr, dp,
             axresults[0].scatter(est[6], est[7], c='k', marker='x', s=2) 
             axresults[0].scatter(est[2], est[3], c='g', marker='x', s=2) 
         
-        axresults[0].set_title("inference on training points")
+        axresults[0].set_title(f"inference on {len(test_results_training_dsT)} training points")
 
     for k, est in test_results_training_dsV.items():
         est = est.cpu()
@@ -181,7 +181,7 @@ def INFER_AND_plotall(tr_dict, trndmdl, trdf, vldf, trnsf, tsdf, dev, m, lr, dp,
             axresults[1].scatter(est[6], est[7], c='k', marker='x', s=2) 
             axresults[1].scatter(est[2], est[3], c='m', marker='x', s=2) 
         
-        axresults[1].set_title("inference on validation points")
+        axresults[1].set_title(f"inference on {len(test_results_training_dsV)} validation points")
 
     for k, est in test_results_training_dsTs.items():
         est = est.cpu()
@@ -196,7 +196,7 @@ def INFER_AND_plotall(tr_dict, trndmdl, trdf, vldf, trnsf, tsdf, dev, m, lr, dp,
             axresults[2].scatter(est[2], est[3], c='r', marker='x', s=2) 
             axresults[2].plot([est[2], est[6]], [est[3], est[7]], '--', alpha=0.3, c=cc,  linewidth=1)
 
-        axresults[2].set_title("inference on testing points")
+        axresults[2].set_title(f"inference on {len(test_results_training_dsTs)} testing points")
 
         
     train_loss_hist              =  tr_dict['Train']        
@@ -660,55 +660,112 @@ def quickplot_psd(df, this_exp_mtdata):
             
             this_bs = df.columns.values[p].split('-')[1]
             
-             
-            # x axis!
+            ############################# x axis!  ########################################
             freqs = np.fft.fftshift(np.fft.fftfreq(nsamps, 1/samp_freq))
             lenofpsd = len(df.iloc[r,p])
-#             print("dont do the length and recalculation of the ds limits, instead read from dictionary like below")
-#             ns_freq_res = freq_res* np.ceil(lenofpsd/2)
-#             fxxc_ns = freqs[(freqs >= -ns_freq_res) & ( freqs <= ns_freq_res) ]
-#             print(fxxc_ns[[0,-1]])
-#             print("lens:", lenofpsd, len(fxxc_ns) )   
+            
+            #print("dont do the length and recalculation of the ds limits, instead read from dictionary like below")
+            #ns_freq_res = freq_res* np.ceil(lenofpsd/2)
+            #fxxc_ns = freqs[(freqs >= -ns_freq_res) & ( freqs <= ns_freq_res) ]
+            #print(fxxc_ns[[0,-1]])
+            #print("lens:", lenofpsd, len(fxxc_ns) )   
             
             ns_read = this_exp_mtdata['narrow_spectrum'] # same for all experiments: FDMAX + buffer
-        
             ns_freq_res_left  = int(np.floor(-ns_read/ freq_res))*freq_res
             ns_freq_res_right = int(np.ceil(ns_read/freq_res))*freq_res
-            fxxc_ns = freqs[(freqs >= ns_freq_res_left) & ( freqs <= ns_freq_res_right) ]
- 
+            fxxc_ns = freqs[(freqs >= ns_freq_res_left) & ( freqs <= ns_freq_res_right)]
+            ################################################################################
+                            
+                            
 
-            #  y axis!
+            ############################# y axis!  ########################################
 
-    
-            ## if spectrum was stored
-            pxxc_ns_DB = np.nan_to_num(10.0 * np.log10(np.square(np.abs(df.iloc[r,p])) ))
-            phase_ns   = np.angle(df.iloc[r,p])
+#             ## if spectrum was stored
+#             pxxc_ns_DB = np.nan_to_num(10.0 * np.log10(np.square(np.abs(df.iloc[r,p])) ))
+#             phase_ns   = np.angle(df.iloc[r,p])
+#             axx[p].plot(fxxc_ns, pxxc_ns_DB)
+#             axx[0].set_ylabel('Power spectrum(db)')       
+
+       
+            ## if linear psd from plt.psd was stored
+            pxxc_ns_linear = df.iloc[r,p]
+            pxxc_ns_DB = 10.0 * np.log10(pxxc_ns_linear)
             axx[p].plot(fxxc_ns, pxxc_ns_DB)
-            axx[0].set_ylabel('Power spectrum(db)')       
-
-            
-            
-#             ## if linear psd from plt.psd was stored
-#             pxxc_ns_linear = df.iloc[r,p]
-#             pxxc_ns_DB = 10.0 * np.log10(pxxc_ns_linear)
-#             axx[p].plot(fxxc_ns, 10.0 * np.log10(pxxc_ns_linear))
-#             axx[0].set_ylabel('Power spectrum density(db/Hz)')     
-
-
-            
+            axx[0].set_ylabel('Power spectrum density(db/Hz)')     
+                            
+            ################################################################################
             axx[p].set_title(f"{this_bs}")
             axx[p].grid(True)
 
         plt.figure("narrowspectrum").suptitle( f"Current speed: {this_speed}", y=1, color = 'g')
         plt.show()
         plt.pause(1)
-#         print("breaking after showing only the 1st sample for each experiment!\n\n")
-        break    
+        break #print("breaking after showing only the 1st sample for each experiment!\n\n")
+            
 
+
+def quickplot_spectrum(df, this_exp_mtdata):
+    ## Plot spectrum
+    
+    nsamps    = this_exp_mtdata['nsamps'] #2**17
+    samp_freq = this_exp_mtdata['rate']  #220000
+    freq_res  = samp_freq/ nsamps
+    
+    for r in range(len(df)):
+        this_speed = df['speed_postuple'].iloc[r][0]
+        fig, axx = plt.subplots(1, 5, figsize=(20, 5), num="narrowspectrum", sharey= True)
+        
+        for ax in axx.flat: 
+            ax.set_xlabel('frequency (Hz)')
+                
+        for p in range(0,5):
+            
+            this_bs = df.columns.values[p].split('-')[1]
+            
+            ############################# x axis!  ########################################
+            freqs = np.fft.fftshift(np.fft.fftfreq(nsamps, 1/samp_freq))
+            lenofpsd = len(df.iloc[r,p])
+            
+            #print("dont do the length and recalculation of the ds limits, instead read from dictionary like below")
+            #ns_freq_res = freq_res* np.ceil(lenofpsd/2)
+            #fxxc_ns = freqs[(freqs >= -ns_freq_res) & ( freqs <= ns_freq_res) ]
+            #print(fxxc_ns[[0,-1]])
+            #print("lens:", lenofpsd, len(fxxc_ns) )   
+            
+            ns_read = this_exp_mtdata['narrow_spectrum'] # same for all experiments: FDMAX + buffer
+            ns_freq_res_left  = int(np.floor(-ns_read/ freq_res))*freq_res
+            ns_freq_res_right = int(np.ceil(ns_read/freq_res))*freq_res
+            fxxc_ns = freqs[(freqs >= ns_freq_res_left) & ( freqs <= ns_freq_res_right)]
+            ################################################################################
+                            
+                            
+
+            ############################# y axis!  ########################################
+
+            ## if spectrum was stored
+            pxxc_ns_DB = np.nan_to_num(10.0 * np.log10(np.square(np.abs(df.iloc[r,p])) ))
+            phase_ns   = np.angle(df.iloc[r,p])
+            axx[p].plot(fxxc_ns, pxxc_ns_DB)
+            axx[0].set_ylabel('Power spectrum(db)')       
+
+       #             ## if linear psd from plt.psd was stored
+#             pxxc_ns_linear = df.iloc[r,p]
+#             pxxc_ns_DB = 10.0 * np.log10(pxxc_ns_linear)
+#             axx[p].plot(fxxc_ns, pxxc_ns_DB)
+#             axx[0].set_ylabel('Power spectrum density(db/Hz)')     
+                            
+            ################################################################################
+            axx[p].set_title(f"{this_bs}")
+            axx[p].grid(True)
+
+        plt.figure("narrowspectrum").suptitle( f"Current speed: {this_speed}", y=1, color = 'g')
+        plt.show()
+        plt.pause(1)
+        break #print("breaking after showing only the 1st sample for each experiment!\n\n")
+                
     
     
-    
-def quickplot_labels_non_utmed(i, fn, df):
+def quickplot_labels_non_utmed_per_df(i, fn, df): # fn is passed
    
     labels  = df["speed_postuple"]    
     bsnames = df.columns.values  
@@ -732,7 +789,7 @@ def quickplot_labels_non_utmed(i, fn, df):
     
     
 
-def quickplot_labels_non_utmed_full_df(i, df):
+def quickplot_labels_non_utmed_full_df(i, df): # fn is missing
     labels  = df["speed_postuple"]    
     
     fig_ori, ax_ori = plt.subplots(figsize=(10, 10))
@@ -750,8 +807,8 @@ def quickplot_labels_non_utmed_full_df(i, df):
 
 
     
-    
-def quickplot_labels_tobeutmed_toshow(i, fn, df):
+# if you wanna plot the UTMED locations! OPTIONAL and only the labels, not full df is passed.    
+def quickplot_labels_tobeutmed_toshow_per_df(i, fn, df): # fn is passed
     
     labels  = df #["speed_postuple"]
         
@@ -770,11 +827,8 @@ def quickplot_labels_tobeutmed_toshow(i, fn, df):
     plt.show()
         
     
-
-    
-    
-    
-def quickplot_labels_tobeutmed_toshow_full_df(i, df):
+# if you wanna plot the UTMED locations! OPTIONAL and only the labels, not full df is passed.    
+def quickplot_labels_tobeutmed_toshow_full_df(i, df): # fn is missing
     
     labels  = df#["speed_postuple"]    
     
