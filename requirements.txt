@@ -1,0 +1,10 @@
+## requirements.txt
+
+## install these required Python libraries
+
+numpy 
+pandas 
+scipy
+h5py
+pytz
+matplotlib
