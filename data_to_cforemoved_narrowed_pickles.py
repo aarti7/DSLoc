@@ -3,9 +3,7 @@ from functions_cforemoval import *
 
 from mine_psd_fetching import *
 
-import utm
-import matplotlib
-import time
+
 ###############################################################
 ###############################################################    
 
@@ -554,7 +552,6 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     if plott:
         plt.ioff()
         plt.close("psdVsloc")
-        pdb.set_trace()
         my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir)
         plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, overall_plots_dir)
     
@@ -631,7 +628,6 @@ if __name__ == "__main__":
         
         if f.is_dir() and str(f).startswith('Shout_'):
             ff+=1
-            print("ff is ori", ff)
             args = parser_itself.parse_args(['--dirdata', str(f) ]) #update the argument here!            
             
             # args = parser_itself.parse_args(['--frqcutoff', 'args_old.frqcutoff]) #update the argument here!            
@@ -645,8 +641,8 @@ if __name__ == "__main__":
 
             print(f"\n\nProcessing the data in {uu}th {args.dirdata} directory\n")
             
-            if uu<5:
-                continue
+            # if uu<5:
+            #     continue
 
             dsfile = h5py.File("%s/%s" % (args.dirdata, args.hdf5name), "r")
             dsfile_with_meas_root = dsfile[MEAS_ROOT]
@@ -674,5 +670,5 @@ if __name__ == "__main__":
 
     # exec(open("/Users/aartisingh/Documents/DopplerSpreadLocalization/mine_psd_fetching.py").read()) 
 
-    pdb.set_trace()
+    # pdb.set_trace()
 
