@@ -467,7 +467,6 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 # ax[l].yaxis.set_major_locator(yloc)
                 # ax[l].yaxis.set_major_formatter(yfmt)
                 
-                print("ff is", ff)
                 if ff in [6,7,18,19,20]:
                     routeclr = '#ffb16d'
                     routename = 'B'
