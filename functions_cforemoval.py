@@ -182,7 +182,18 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 
 
 
-                if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600: # to ensure signal was indeed "seen"
+                # to ensure signal was indeed "seen"
+                # if val_psd_max > pwr_threshold and val_freq_max < lpf_fc and val_freq_max > 0: 
+
+
+                # manually fixing for 5 fixables
+                # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D7:  02-03-2023_12-55-47
+                # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 6200: # D13: 02-14-2023_10-45-17
+                # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5600:  # D14: 02-14-2023_12-48-02
+                # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 8300:  # D15: 02-14-2023_14-49-21
+                # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5000:  # D21: 02-16-2023_16-59-03
+
+
                     # print(n, p, "val_psd_max" , val_psd_max)  if p<2 else ''
 
                     freqoff_dict[df_allrx.columns[p]].append(val_freq_max)

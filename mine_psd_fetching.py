@@ -28,7 +28,31 @@ plt.rc('ytick', labelsize=8)
 
 
 
-# table_dict = {,,,,,,,}
+names_to_ds_dict = {
+"01-30-2023_15-40-55":"D1",
+"01-30-2023_17-47-39":"D2",
+"01-30-2023_19-53-09":"D3",
+"01-30-2023_20-33-48":"D4",
+"01-30-2023_21-29-33":"D5",
+"02-03-2023_10-39-20":"D6",
+"02-03-2023_12-55-47":"D7",
+"02-06-2023_14-29-39":"D8",
+"02-09-2023_13-05-31":"D9",
+"02-09-2023_15-08-10":"D10",
+"02-09-2023_17-12-28":"D11",
+"02-14-2023_08-37-53":"D12",
+"02-14-2023_10-45-17":"D13",
+"02-14-2023_12-48-02":"D14",
+"02-14-2023_14-49-21":"D15",
+"02-14-2023_16-57-55":"D16",
+"02-14-2023_18-53-20":"D17",
+"02-16-2023_10-04-45":"D18",
+"02-16-2023_12-23-48":"D19",
+"02-16-2023_14-55-52":"D20",
+"02-16-2023_16-59-03":"D21",
+"02-16-2023_19-01-43":"D22",
+"02-16-2023_19-40-05":"D23",
+}
 
 
 
@@ -252,6 +276,8 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
 
     #### ALL BS in one offset vs time 
     # print("fn is ====", fn)
+    ds_numbr_is = names_to_ds_dict[fn]
+
     plt.figure(figsize=(10,5), num = "ZeroSpeedOffset_overtime_allBSin1")   
 
     times = []
@@ -276,13 +302,13 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     bb = np.round(np.linspace(0, max(times), 10 ), 2)
     plt.xticks(bb, bb,  rotation=90)
     plt.legend()
-    plt.xlabel(f"Elapsed time (hours) during dataset D7, collected on date {fn.split('_')[0]}.")#+f' D{ff}') 
+    plt.xlabel(f"Elapsed time (hours) during dataset {ds_numbr_is} collected on date {fn.split('_')[0]}.")#+f' D{ff}') 
     plt.ylabel("Frequency offset (Hz)")
     plt.grid(alpha=0.7)
     plt.tight_layout()
     plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
-    pdb.set_trace()
+    
 
 ###############################################################
 ###############################################################  ###############################################################

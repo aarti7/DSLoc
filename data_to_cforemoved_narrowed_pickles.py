@@ -203,9 +203,13 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     plott = 1
 
     if plott:
-        
-        alllocs_df = gt_loc_df.apply( lambda row: pd.Series(utm.from_latlon( row['Lat'], row['Lon'])[0:2]), axis=1)
-        
+        runtime = f'{int(time.time())}'
+        print("runtime is:", runtime)
+
+        overall_plots_dir = Path(args.dirdata+'/overall_plots')
+        overall_plots_dir.mkdir(parents=True, exist_ok=True)
+
+
         colnames_list  = df_allrx.columns.values 
         rmsdict =   {key: [] for key in colnames_list}
         
@@ -217,22 +221,19 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         # last=len(colnames_list)+1
         # fig, ax = plt.subplots(frst, last, figsize=(14, 3), num = "psdVsloc", sharey = True, sharex = True)
         # l=last-1
-
-        runtime = f'{int(time.time())}'
-        print("runtime is:", runtime)
-        overall_plots_dir = Path(args.dirdata+'/overall_plots/'+f"{runtime}")
-        overall_plots_dir.mkdir(parents=True, exist_ok=True)
         
+        """
         frst=1
         last=2
         # fig, ax = plt.subplots(frst, last, figsize=(8, 3), num = "psdVsloc", sharey = True, sharex = True)
         fig, ax = plt.subplots(frst, last, figsize=(8, 3), num = "psdVsloc", sharey = False, sharex = False)
         l=last-1  
 
-
+        alllocs_df = gt_loc_df.apply( lambda row: pd.Series(utm.from_latlon( row['Lat'], row['Lon'])[0:2]), axis=1)
 
         all_BS_coords_df = pd.DataFrame(all_BS_coords.values(), columns=['Latitude', 'Longitude'], index=all_BS_coords.keys())
         all_BS_coords_df[['Northing', 'Easting']] = all_BS_coords_df.apply(lambda row: pd.Series(latlon_to_utm(row)), axis=1) 
+        """
 
 
     
@@ -365,22 +366,22 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                         
             #####################################
             
-            if plott and p==4:
-                f=0 #p
+            if plott:# and p==4:
+                # f=0 #p
 
                 f_ns              = freq_full[fdidx]      
                 psdln_ns          = np.nan_to_num(np.square(np.abs(full_spectrum[fdidx])))
                 psdDB_ns          = np.nan_to_num(10.0 *np.log10(psdln_ns))  
                 aa_psd_max        = psdDB_ns[np.argmax(psdDB_ns)]
 
-                ax[f].clear()
-                ax[f].plot(f_ns, psdDB_ns, '-o',color = 'r' if this_speed.values[0]==0 else 'g', label = f"{n}th FP at {df_allrx.columns[p].split('-')[1]}")
+                # ax[f].clear()
+                # ax[f].plot(f_ns, psdDB_ns, '-o',color = 'r' if this_speed.values[0]==0 else 'g', label = f"{n}th FP at {df_allrx.columns[p].split('-')[1]}")
                 
                 if aa_psd_max > pwr_threshold:
                     rmsis = rmsfunction(psdDB_ns, psdln_ns, f_ns, pwr_threshold)
                     
                     rmsdict[df_allrx.columns[p]].append([rmsis, this_speed.values[0], this_measr_timeuptoseconds, matched_row_ingt.iloc[0][3:5][0], matched_row_ingt.iloc[0][3:5][1] , calcDistLatLong( all_BS_coords[df_allrx.columns[p].split('-')[1]], matched_row_ingt.iloc[0][3:5] )])
-                    
+                    """
                     rms_at = AnchoredText(f"RMS:{round(rmsis,2)} Hz\nSpeed:{round(this_speed.values[0],1)} mps", prop=dict(size=8), frameon=True,pad=0.1, loc='upper left')  #\nMax. noise:{round(pwr_threshold,2)}
                     rms_at.patch.set_boxstyle("round, pad=0.,rounding_size=0.2")
                    
@@ -400,7 +401,6 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 """                
                 # lat_y_40s, long_x_11s =  matched_row_ingt.iloc[0][3], matched_row_ingt.iloc[0][4]
                 # # ax[1].scatter( long_x_11s, lat_y_40s, c='k', marker='o', s=10)
-                # # pdb.set_trace()
                 # easting_lngs_x, northing_lats_y = utm.from_latlon(lat_y_40s, long_x_11s)[0:2]
                 # print( easting_lngs_x, northing_lats_y)
                 # ax[5].scatter(easting_lngs_x, northing_lats_y, c='k', marker='o', s=10, label= f"Curent Speed: {round(this_speed.values[0],1)} mps")
@@ -525,36 +525,87 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 
                 ax[l].yaxis.tick_right()
                 ax[l].yaxis.set_label_position("right")
-
                 ax[l].set_ylabel("UTM Northing (m)")
                 ax[l].set_xlabel("UTM Easting (m)")
-
                 ax[l].legend(loc='lower right')
-
                 plt.tight_layout()
-                plt.draw()
-                plt.pause(0.01)
-
                 
-                # plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{n}_{fnm}"+"psdVsloc.pdf",format='pdf')
+                # plt.draw()
+                # plt.pause(0.01)
                 
-                # fnplot = f"{overall_plots_dir}" +"/"+ f"{n}.pdf"
-                # plt.savefig(fnplot,format='pdf')
-
-
-            
+                plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}"+"psdVsloc.pdf",format='pdf')
+                """         
 
         print("Rows traversed: %i/%i" %(n+1, n_total_measurements), end='\r')
 
 
 
     if plott:
-        plt.ioff()
-        plt.close("psdVsloc")
-        my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir)
-        plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, overall_plots_dir)
+        # plt.ioff()
+        # plt.close("psdVsloc")
+        plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, overall_plots_dir, runtime)
+        my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
     
 
+    """
+    5 fixables!
+
+    Shout_meas_02-03-2023_12-55-47 bes!
+    Shout_meas_02-14-2023_14-49-21 smt! big noise/snr/ inteference), 
+    Shout_meas_02-14-2023_12-48-02 utsar!=fixed bes! not fixed: two mirror peaks around 0, 1khz of frequncy.. looks like lol), 
+    Shout_meas_02-14-2023_10-45-17 ustar!=fixed   (LO leak) 
+    Shout_meas_02-16-2023_16-59-03 bes! (big noise/snr/ inteference, numerous peaks)
+                
+
+    # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D7:  02-03-2023_12-55-47
+    # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 6200: # D13: 02-14-2023_10-45-17
+    # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D14: 02-14-2023_12-48-02
+    # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 8300:  # D15: 02-14-2023_14-49-21
+    if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5000:  # D21: 02-16-2023_16-59-03
+
+
+
+    2 unfixables!
+    Shout_meas_02-09-2023_15-08-10, Shout_meas_02-09-2023_17-12-28
+
+)
+    
+
+    Shout_meas_01-30-2023_15-40-55 (multiple, first picked which was smaller)
+
+    The CFO, that is the offest between the mobile transmitter's carrier frequency and the frequency of a receiver base-station,
+    shows a trend in its values over the course of an experiement.
+    We show this trend using our longest data $D6$ collected in one experiment in figure \ref{}, with the 
+
+
+    ##################  All possible mep offsets ##################
+    ###############################################################
+
+    mep_ppm = {
+    '4407': [8500,9500],  #feb16
+    '4603': [6000,7000],  #feb3
+    '4734': [8500,10000], #feb16, feb14
+    '6181': [7500,8500],  #jan30
+    # '6183': [6500,7500],  #jan30(3)
+    # '6183': [1900,5000], #feb9(3), feb6(1), 
+    }
+
+    mep_ppm = {'6180': [7000,8000],
+    '6181': [7500,8500],
+    '6182': [7000,8000],
+    '6185': [7000,8000],
+    '6183': [1900,5000],
+    '4555': [3000,4000],
+    '4603': [6000,7000],
+    '4604': [6000,7000],
+    '4734': [8500,9500],
+    '4407': [8500,9500]
+    }
+    #'6183': [6500,7500]:
+    
+
+    """
+    pdb.set_trace()
     print(f'\nSize of a single spectrum : {len(freq_full[fdidx])}')
 
     final_totallength = [len(val) for k, val in enumerate(data_and_label_dict.values()) ]
@@ -623,6 +674,7 @@ if __name__ == "__main__":
     print("\nTotal number of data folders to read:", NumberofDatafolders, "\n\n")
 
     ff=0
+
     for uu, f in enumerate(sorted(Path(args_old.dircommon).iterdir())):
         
         if f.is_dir() and str(f).startswith('Shout_'):
@@ -637,10 +689,15 @@ if __name__ == "__main__":
             args.maxspeed   = args_old.maxspeed            
             args.degoffit   = args_old.degoffit
             args.window     = args_old.window # print(args)
-
-            print(f"\n\nProcessing the data in {uu}th {args.dirdata} directory\n")
             
-            # if uu<5:
+            print("uu is", uu, "\nff is", ff)
+
+            print(f"\n\nProcessing the data in {ff}th {args.dirdata} directory\n")
+            
+            
+            
+            # if ff<5:
+            #     print("ff is in the if loop", ff)
             #     continue
 
             dsfile = h5py.File("%s/%s" % (args.dirdata, args.hdf5name), "r")
@@ -661,7 +718,8 @@ if __name__ == "__main__":
 
             metadata_dict, cfo_summary_dict, datalabel_dict, nofrws = do_data_storing(ff, needed_attrs_obj, commonANDdeepest_root_foralltxrx, leaves_withTX if args.treebranch =='wtx' else leaves_withoutTX) #all_leaves_2) # leaves_withTX)
             
-            totalrows += nofrws # pdb.set_trace() # break   
+            totalrows += nofrws 
+            # break   
 
     print(f"\n\nAll {NumberofDatafolders} data folders in the common data directory {args.dircommon} done! Total valid rows collected = {totalrows}\n\n")
     
@@ -669,5 +727,4 @@ if __name__ == "__main__":
 
     # exec(open("/Users/aartisingh/Documents/DopplerSpreadLocalization/mine_psd_fetching.py").read()) 
 
-    # pdb.set_trace()
 
