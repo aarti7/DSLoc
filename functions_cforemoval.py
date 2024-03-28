@@ -54,6 +54,7 @@ def mylpf(this_measurement, fsr, fc):
 def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold):
     '''
     '''
+    print("\n\nCalculating the cfo.... ")
     columns_names_array     = df_allrx.columns.values
     n_endpoints_is_subplots = len(columns_names_array)
     n_total_measurements    = len(df_allrx)
@@ -78,6 +79,7 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 
     ##########################
     # plt.ion()
+    # pdb.set_trace()
 
     for n in range(0, n_total_measurements):
         for p in range(0, n_endpoints_is_subplots): #    [1]:#     [3]:# 
@@ -129,73 +131,116 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
             this_speed = matched_row_ingt['Speed (meters/sec)']
 
 
+            fpk_thr  = 0.0007 #0.001
+            fpk_dst  = 10    #300
+            
+            fpk_prom = .001 #3 #30
+            fpk_high = 0.002
+            
             ##########################
             if this_speed.values[0] == 0: # to ensure only for cases  when there was no motion. 
                 
                 this_measurement  = df_allrx.iloc[n,p]
                 this_measurement  = mylpf(this_measurement, fsr, lpf_fc)
 
-                # new
-                result_fft,      freqs = get_full_DS_spectrum(this_measurement, fsr)
-                result_fft_db          = np.nan_to_num(10.0 * np.log10(np.square(np.abs(result_fft))))  #sq_abs_fftshift_fft
-                listofidxsofresult, _  = find_peaks(result_fft_db)  #Returns:Indices of peaks in x that satisfy all given conditions. # (Pdb) idxs[[0,-1]]# array([     2, 131070])
+                result_fft,      freqs     = get_full_DS_spectrum(this_measurement, fsr)
+                result_fft_lin             = np.nan_to_num(np.square(np.abs(result_fft)))        
 
-                val_maxpsd_in_result=np.max(result_fft_db[listofidxsofresult])
+                listofidxsofresult_lin, _  = find_peaks(result_fft_lin, threshold=fpk_thr, distance=fpk_dst)       # prominence=fpk_prom, distance=300)# threshold=0.001)# prominence=3)# height = 0.002)# threshold=0.001)#, prominence=30)   #Returns:Indices of peaks in x that satisfy all given conditions. # (Pdb) idxs[[0,-1]]# array([     2, 131070])
+                
+                if len(listofidxsofresult_lin) ==0: # if len(listofidxsofresult_lin) >=200:
+                    pdb.set_trace()
+                    break
 
-                idx_ofmaxpsd_but_idx_in_list=np.argmax(result_fft_db[listofidxsofresult])
-                idx_maxpsd_in_result=listofidxsofresult[idx_ofmaxpsd_but_idx_in_list]
-
-                val_psd_max                 = result_fft_db[idx_maxpsd_in_result]
+                idx_ofmaxpsd_but_idx_in_list= np.argmax(result_fft_lin[listofidxsofresult_lin])
+                idx_maxpsd_in_result=listofidxsofresult_lin[idx_ofmaxpsd_but_idx_in_list]
+                val_psd_max                 = result_fft_lin[idx_maxpsd_in_result]
                 val_freq_max                = freqs[idx_maxpsd_in_result]  #### THIS IS THE APPROAX OFFSET!!!
+                
+                result_fft_db               = np.nan_to_num(10.0 * np.log10(result_fft_lin))             
+                sorted_arr                  = np.sort(result_fft_db)[::-1]
+
+                top_3_values                = sorted_arr[:3]
+                indexes = [i for i in range(len(result_fft_db) - len(top_3_values) + 1) if result_fft_db[i:i+len(top_3_values)] == top_3_values]
 
 
-                # #THIS WAS INCORRECT => 
+                # listofidxsofresult, _      = find_peaks(result_fft_db)                
+                # idx_ofmaxpsd_but_idx_in_list=np.argmax(result_fft_db[listofidxsofresult])
+                # idx_maxpsd_in_result=listofidxsofresult[idx_ofmaxpsd_but_idx_in_list]
+                # val_psd_max                 = result_fft_db[idx_maxpsd_in_result]
+                # val_freq_max                = freqs[idx_maxpsd_in_result]  #### THIS IS THE APPROAX OFFSET!!!
+
+
+
+                # # ##THIS WAS INCORRECT => 
                 # # idx_psd_max               = np.argmax(result_fft_temp_db[idxs])
+                # # val_maxpsd_in_result=     np.max(result_fft_db[listofidxsofresult])
+                # # mxpsd = np.max(result_fft_db)
+                # # frq_mxpsd = freqs[np.argmax(result_fft_db) ]
+                
                 # # CORRECT!
                 # idx_psd_max_in_all_peaks_idxs_not_in_results = idxs[np.argmax(result_fft_temp_db[idxs])] 
                 # idx_psd_max = idx_psd_max_in_all_peaks_idxs_not_in_results
+                 
+
+
+
+                if p==3 and n in [144, 188, 189, 192, 254, 276, 289, 290, 291, 299, 365, 366, 414, 421, 426, 498, 499]:
+                # if p==0:# and len(listofidxsofresult_lin) <=50:# and n >=133:# in [12, 28, 64, 262, 263, 270, 273, 356]:
+                    # plt.clf()
+                    # print(mxpsd, "at", frq_mxpsd) 
+
+                    print(n, "len=", len(listofidxsofresult_lin) )# ,round(val_freq_max,2), round(val_psd_max,2))
+                    
+                    plt.plot(freqs, result_fft_lin, freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'x' \
+                     label=f"{n}{df_allrx.columns[p][9:12]}. frq({val_freq_max})", color = 'r' if this_speed.values[0] ==0 else 'g') #\n mean{np.mean(result_fft_temp_db)} \n max {val_psd_max}  \n
+                    # plt.axhline(y = pwr_threshold, color = 'b', linestyle = '-') 
+                    plt.plot(freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], \
+                        'x', color='b', label=f'number of Peaks: {len(listofidxsofresult_lin)}')
+                    # plt.scatter(val_freq_max, val_psd_max, marker='o', s=100,  color='g', label=f'max at {val_freq_max}')
+                    plt.legend(loc='upper left')
+                    plt.plot(listofidxsofresult_lin, result_fft_lin[listofidxsofresult_lin], "o", c="cyan")
+                    # plt.ylim(-60, 10)
+                    plt.ylim(0, 0.04)
+                    plt.xlim(0, 10000)
+                    plt.grid(True)
+                    plt.title('speed = zero')
+                    plt.show()
+
+
+                    # plt.pause(0.1)
+                    pdb.set_trace()
+   
+                    plt.plot(freqs, result_fft_lin, freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'x');plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+
+
+
 
 
 
                 # # print("freq offset is", val_freq_max, "max power is" , val_psd_max, n, p)
                 # # print("mean of psd is", np.mean(result_fft_temp_db), "std is", np.std(result_fft_temp_db), "3times std of psd is", 3*np.std(result_fft_temp_db))
-                                
-
-                # if p==4:# and n==477:
-                #     # plt.clf()
-                #     plt.plot(freqs, result_fft_db, \
-                #      label=f"{n}{df_allrx.columns[p][9:12]}. frq({val_freq_max})", color = 'r' if this_speed.values[0] ==0 else 'g') #\n mean{np.mean(result_fft_temp_db)} \n max {val_psd_max}  \n
-                #     plt.axhline(y = pwr_threshold, color = 'b', linestyle = '-') 
-                #     plt.legend(loc='upper left')
-                #     plt.ylim(-60, 10)
-                #     plt.xlim(0, 10000)
-                #     plt.grid(True)
-                #     plt.title('speed = zero')
-                #     plt.show()
-
-                #     # plt.pause(0.1)
-                #     # pdb.set_trace()
-                    
+  
                 # threshold = -21 #-23.5 # np.mean(result_fft_temp) + 3*np.std(result_fft_temp)
                 # if val_psd_max > threshold and val_freq_max < bus_frequency_offset_ranges[1] and val_freq_max > bus_frequency_offset_ranges[0]: # to ensure signal was indeed "seen"
 
 
 
 
-                # to ensure signal was indeed "seen"
-                # if val_psd_max > pwr_threshold and val_freq_max < lpf_fc and val_freq_max > 0: 
-
 
                 # manually fixing for 5 fixables
                 # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D7:  02-03-2023_12-55-47
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 6200: # D13: 02-14-2023_10-45-17
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5600:  # D14: 02-14-2023_12-48-02
-                # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 8300:  # D15: 02-14-2023_14-49-21
+                # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 8300:  # D15: 02-14-2023_14-49-21<<
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5000:  # D21: 02-16-2023_16-59-03
 
+                # to ensure signal was indeed "seen"
+                if  val_freq_max < lpf_fc and val_freq_max > 0 and val_psd_max > 0.01: 
+                    print("meanPSD:", round(np.mean(result_fft_db),3), "stdPSD:", round(np.std(result_fft_db),3), "3timesstdPSD:", round(3*np.std(result_fft_db),3))
+                    print(f"number of Peaks: {len(listofidxsofresult_lin)}, freq offset is", val_freq_max, "max power is", val_psd_max, n, p)
 
                     # print(n, p, "val_psd_max" , val_psd_max)  if p<2 else ''
-
                     freqoff_dict[df_allrx.columns[p]].append(val_freq_max)
                     freqoff_time_dict[df_allrx.columns[p]].append([val_freq_max, this_measr_timeuptoseconds])
                     # freqoff_dist_dict[df_allrx.columns[p]].append([val_freq_max, calcDistLatLong(  all_BS_coords[columns_names_array[p].split('-')[1]] ,  matched_row_ingt.iloc[0][3:5]  )])
@@ -207,6 +252,8 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 
     # plt.ioff()
     # plt.close()
+    # pdb.set_trace()
+    
     n_stationary_msrmnts = how_many_zero_vel/n_endpoints_is_subplots
     n_moving_msrmnts     = how_many_nonzero_vel/n_endpoints_is_subplots
     
@@ -314,6 +361,9 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
     'fitdmethod': fitd_frqoff_perrx_dict, 
     'allcfotime': freqoff_time_dict
     }
+    print("......done getting the CFO\n\n")
+
+    # plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}')
 
     return summary_cfo_dict, no_measr_time_idx_n, no_gps_mesrnt_idx_n 
 

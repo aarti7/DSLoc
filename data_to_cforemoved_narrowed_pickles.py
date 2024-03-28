@@ -172,7 +172,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ### calling the function for cfo calculation #############################
         cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
 
-        # plot_all_off_dictionaries(cfo_summary_dict)
+        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}')
+        # pdb.set_trace()
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -551,9 +552,12 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     5 fixables!
 
     Shout_meas_02-03-2023_12-55-47 bes!
-    Shout_meas_02-14-2023_14-49-21 smt! big noise/snr/ inteference), 
-    Shout_meas_02-14-2023_12-48-02 utsar!=fixed bes! not fixed: two mirror peaks around 0, 1khz of frequncy.. looks like lol), 
+    
+    
     Shout_meas_02-14-2023_10-45-17 ustar!=fixed   (LO leak) 
+    Shout_meas_02-14-2023_12-48-02 utsar!=fixed bes! not fixed: two mirror peaks around 0, 1khz of frequncy.. looks like lol), 
+    Shout_meas_02-14-2023_14-49-21 smt! big noise/snr/ inteference)<<
+    
     Shout_meas_02-16-2023_16-59-03 bes! (big noise/snr/ inteference, numerous peaks)
                 
 
@@ -696,7 +700,7 @@ if __name__ == "__main__":
             
             
             
-            # if ff<5:
+            # if ff<2:
             #     print("ff is in the if loop", ff)
             #     continue
 
