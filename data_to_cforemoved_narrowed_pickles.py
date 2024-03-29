@@ -172,7 +172,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ### calling the function for cfo calculation #############################
         cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(f"{args.dirdata}".split('meas_')[1], df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
 
-        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}', degreeforfitting)
+        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}', degreeforfitting )
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -695,7 +695,7 @@ if __name__ == "__main__":
             
             
             
-            # if ff<2:
+            # if ff<14:
             #     print("ff is in the if loop", ff)
             #     continue
 

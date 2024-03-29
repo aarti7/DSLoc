@@ -7,7 +7,7 @@ lowerlimit_purple_5perfect_3bads_dict = {
 "02-09-2023_17-12-28":["D11", 10000, 1775],
 "02-03-2023_12-55-47":["D7",   8000, 5600],
 "02-14-2023_10-45-17":["D13", 10000, 6200],
-"02-14-2023_12-48-02":["D14", 10000, 6100],
+"02-14-2023_12-48-02":["D14", 10000, 6200],
 "02-14-2023_14-49-21":["D15", 10000, 8300],
 "02-16-2023_16-59-03":["D21", 10000, 5000],
 }
@@ -168,7 +168,7 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
                 val_freq_max                = freqs[idx_maxpsd_in_result]  #### THIS IS THE APPROAX OFFSET!!!
 
                 lowerlimitspectrum = lowerlimit_purple_5perfect_3bads_dict[fn][2] if  fn in lowerlimit_purple_5perfect_3bads_dict else 0
-                upperlimitspectrum = lowerlimit_purple_5perfect_3bads_dict[fn][1] if  fn in lowerlimit_purple_5perfect_3bads_dict else lpf_fc
+                upperlimitspectrum = lowerlimit_purple_5perfect_3bads_dict[fn][1] if  fn in lowerlimit_purple_5perfect_3bads_dict  else lpf_fc
 
                 # to ensure signal was indeed "seen"
                 if val_psd_max > pwr_threshold and val_freq_max < upperlimitspectrum and val_freq_max > lowerlimitspectrum: 
@@ -225,7 +225,7 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
     if len([key for key, value in freqoff_time_dict.items() if len(value) == 0]) != n_endpoints_is_subplots:
         for one_key, value_all_tuples in freqoff_time_dict.items():
             # print("polyfit cfo estimating for",one_key)
-            if len(value_all_tuples) !=0:
+            if len(value_all_tuples) > degreeforfitting: # !=0: 
                 tts=[]
                 ffs=[]
                 for each_tuple in value_all_tuples:
@@ -243,7 +243,7 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
                 # exit()
     
     else:
-        print("stationary signal never seen at any BS, check your bus_frequency_offset_ranges !")
+        print("stationary signal never seen at any BS, check your threshold or bus_frequency_offset_ranges !")
         exit()  
 
 

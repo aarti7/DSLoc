@@ -288,7 +288,8 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     # print("fn is ====", fn)
     ds_numbr_is = names_to_ds_dict[fn]
 
-    plt.figure(figsize=(10,5), num = "ZeroSpeedOffset_overtime_allBSin1")   
+    fig, ax = plt.subplots(figsize=(10,5), num = "ZeroSpeedOffset_overtime_allBSin1")   
+    ax.set_rasterized(True)
 
     times = []
     lenn = []
@@ -298,7 +299,7 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
         tt=[]
         tt_unaltered=[]
         vals = kvp[1]
-        if len(vals) != 0:
+        if len(vals) >= degreeforfitting+1: # len(vals) != 0:
             for j in range(len(vals)):
                 vv.append(vals[j][0])
                 
@@ -315,7 +316,7 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
             lenn.append(len(vals))
         else:
             plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")
-            plt.plot([], [], label=f'No fitting done') 
+            plt.plot([], [], label=f'No fitting performed') 
         
 
 
@@ -326,8 +327,12 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     plt.ylabel("Frequency offset (Hz)")
     plt.grid(alpha=0.7)
     plt.tight_layout()
-    print("CFO plots saved!")
-    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
+    print("\nCFO plots saved!\n")
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200)
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
+    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
     
 
