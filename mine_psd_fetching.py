@@ -332,7 +332,7 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200)
     # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
     # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
-    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
+    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
     
 
