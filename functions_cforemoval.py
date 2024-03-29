@@ -1,4 +1,18 @@
 from libs import * 
+
+###### manual fixing for the outliers in CFOs! Should be automated with the find_peaks to remove measurements with low snr and interference !
+lowerlimit_purple_5perfect_3bads_dict = {
+# "01-30-2023_15-40-55":["D1",   8000, 5600],
+"02-09-2023_15-08-10":["D10",  3000, 0],
+"02-09-2023_17-12-28":["D11", 10000, 1775],
+"02-03-2023_12-55-47":["D7",   8000, 5600],
+"02-14-2023_10-45-17":["D13", 10000, 6200],
+"02-14-2023_12-48-02":["D14", 10000, 6100],
+"02-14-2023_14-49-21":["D15", 10000, 8300],
+"02-16-2023_16-59-03":["D21", 10000, 5000],
+}
+
+
 ######################################## Get spectrum of iqs ###
 ################################################################
 
@@ -51,9 +65,10 @@ def mylpf(this_measurement, fsr, fc):
     res = sig.convolve(this_measurement, LPF, mode='same')
     return res
     
-def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold):
+def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold):
     '''
     '''
+    print("\n\nCalculating the cfo.... ")
     columns_names_array     = df_allrx.columns.values
     n_endpoints_is_subplots = len(columns_names_array)
     n_total_measurements    = len(df_allrx)
@@ -135,69 +150,28 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 this_measurement  = df_allrx.iloc[n,p]
                 this_measurement  = mylpf(this_measurement, fsr, lpf_fc)
 
-                # new
                 result_fft,      freqs = get_full_DS_spectrum(this_measurement, fsr)
                 result_fft_db          = np.nan_to_num(10.0 * np.log10(np.square(np.abs(result_fft))))  #sq_abs_fftshift_fft
                 
-                # mxpsd = np.max(result_fft_db)
-                # frq_mxpsd = freqs[np.argmax(result_fft_db) ]
-
                 listofidxsofresult, _  = find_peaks(result_fft_db)#, threshold=5)#, prominence=30)   #Returns:Indices of peaks in x that satisfy all given conditions. # (Pdb) idxs[[0,-1]]# array([     2, 131070])
+
+
+                # if len(listofidxsofresult_lin) >=200:
+                if len(listofidxsofresult) ==0: 
+                    print("no peak detected!!!")
+                    break
 
                 idx_ofmaxpsd_but_idx_in_list=np.argmax(result_fft_db[listofidxsofresult])
                 idx_maxpsd_in_result=listofidxsofresult[idx_ofmaxpsd_but_idx_in_list]
 
-                # val_maxpsd_in_result=np.max(result_fft_db[listofidxsofresult])
                 val_psd_max                 = result_fft_db[idx_maxpsd_in_result]
                 val_freq_max                = freqs[idx_maxpsd_in_result]  #### THIS IS THE APPROAX OFFSET!!!
 
-
-                # #THIS WAS INCORRECT => 
-                # # idx_psd_max               = np.argmax(result_fft_temp_db[idxs])
-                # # CORRECT!
-                # idx_psd_max_in_all_peaks_idxs_not_in_results = idxs[np.argmax(result_fft_temp_db[idxs])] 
-                # idx_psd_max = idx_psd_max_in_all_peaks_idxs_not_in_results
-
-                              
-
-                # if p==0 and n in [12, 28, 64, 262, 263, 270, 273, 356]:
-                #     # plt.clf()
-                #     # print(mxpsd, "at", frq_mxpsd)
-
-                #     print(n, "len=", len(listofidxsofresult),  round(val_freq_max,2), round(val_psd_max,2))
-                    
-                #     plt.plot(freqs, result_fft_db, \
-                #      label=f"{n}{df_allrx.columns[p][9:12]}. frq({val_freq_max})", color = 'r' if this_speed.values[0] ==0 else 'g') #\n mean{np.mean(result_fft_temp_db)} \n max {val_psd_max}  \n
-                #     plt.axhline(y = pwr_threshold, color = 'b', linestyle = '-') 
-                #     plt.plot(freqs[listofidxsofresult], result_fft_db[listofidxsofresult], 'x', color='b', label=f'number of Peaks: {len(listofidxsofresult)}')
-                #     plt.scatter(val_freq_max, val_psd_max, marker='o', s=100,  color='g', label=f'max at {val_freq_max}')
-                #     plt.legend(loc='upper left')
-                #     plt.ylim(-60, 10)
-                #     plt.xlim(0, 10000)
-                #     plt.grid(True)
-                #     plt.title('speed = zero')
-                #     plt.show()
-
-                    # plt.pause(0.1)
-                    # pdb.set_trace()
-                    
-                
-
-
-
-                # # print("freq offset is", val_freq_max, "max power is" , val_psd_max, n, p)
-                # # print("mean of psd is", np.mean(result_fft_temp_db), "std is", np.std(result_fft_temp_db), "3times std of psd is", 3*np.std(result_fft_temp_db))
-  
-                # threshold = -21 #-23.5 # np.mean(result_fft_temp) + 3*np.std(result_fft_temp)
-                # if val_psd_max > threshold and val_freq_max < bus_frequency_offset_ranges[1] and val_freq_max > bus_frequency_offset_ranges[0]: # to ensure signal was indeed "seen"
-
-
-
+                lowerlimitspectrum = lowerlimit_purple_5perfect_3bads_dict[fn][2] if  fn in lowerlimit_purple_5perfect_3bads_dict else 0
+                upperlimitspectrum = lowerlimit_purple_5perfect_3bads_dict[fn][1] if  fn in lowerlimit_purple_5perfect_3bads_dict else lpf_fc
 
                 # to ensure signal was indeed "seen"
-                if val_psd_max > pwr_threshold and val_freq_max < lpf_fc and val_freq_max > 0: 
-
-
+                if val_psd_max > pwr_threshold and val_freq_max < upperlimitspectrum and val_freq_max > lowerlimitspectrum: 
                 # manually fixing for 5 fixables
                 # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D7:  02-03-2023_12-55-47
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 6200: # D13: 02-14-2023_10-45-17
@@ -206,10 +180,10 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5000:  # D21: 02-16-2023_16-59-03
 
 
-                    # print(n, p, "val_psd_max" , val_psd_max)  if p<2 else ''
                     freqoff_dict[df_allrx.columns[p]].append(val_freq_max)
                     freqoff_time_dict[df_allrx.columns[p]].append([val_freq_max, this_measr_timeuptoseconds])
                     # freqoff_dist_dict[df_allrx.columns[p]].append([val_freq_max, calcDistLatLong(  all_BS_coords[columns_names_array[p].split('-')[1]] ,  matched_row_ingt.iloc[0][3:5]  )])
+                    # print(n, p, "val_psd_max" , val_psd_max)  if p<2 else ''
 
                 how_many_zero_vel = how_many_zero_vel+1
         
@@ -218,7 +192,8 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 
     # plt.ioff()
     # plt.close()
-    pdb.set_trace()
+
+
     n_stationary_msrmnts = how_many_zero_vel/n_endpoints_is_subplots
     n_moving_msrmnts     = how_many_nonzero_vel/n_endpoints_is_subplots
     
@@ -326,7 +301,9 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
     'fitdmethod': fitd_frqoff_perrx_dict, 
     'allcfotime': freqoff_time_dict
     }
-
+    print("......done getting the CFO\n\n")
+    # plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}')
+    
     return summary_cfo_dict, no_measr_time_idx_n, no_gps_mesrnt_idx_n 
 
 ## remove cfo

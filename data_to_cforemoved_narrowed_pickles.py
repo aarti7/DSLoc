@@ -170,7 +170,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ##lengthy df traversal 1 to get cfo ###################################################################
         
         ### calling the function for cfo calculation #############################
-        cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
+        cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(f"{args.dirdata}".split('meas_')[1], df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
 
         plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}')
         # pdb.set_trace()
@@ -201,7 +201,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     ######################################################################################################################################
     ######################################################################################################################################
     fnm = f"{args.dirdata}".split('meas_')[1] 
-    plott = 1
+    plott = 0
 
     if plott:
         runtime = f'{int(time.time())}'
@@ -292,260 +292,260 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     ######################################################################################################################################
     ######################################################################################################################################
     
-    ########### iterating dataframe to make pickles with (spectrum, label) 
-    for n in range(0, n_total_measurements ):
+    # ########### iterating dataframe to make pickles with (spectrum, label) 
+    # for n in range(0, n_total_measurements ):
 
-        if n in no_measr_time_idx_n:
-            print(f"{n}th measurment skipped cause its empty\n") # as this pth /all p msrmnts is missing! Neither should store or do labelling for those who are present")
-            continue # but not exiting(breaking) the loop. Such that, will go to the next n
+    #     if n in no_measr_time_idx_n:
+    #         print(f"{n}th measurment skipped cause its empty\n") # as this pth /all p msrmnts is missing! Neither should store or do labelling for those who are present")
+    #         continue # but not exiting(breaking) the loop. Such that, will go to the next n
         
-        for p in range(0, n_endpoints_is_subplots):   
+    #     for p in range(0, n_endpoints_is_subplots):   
 
-            this_measr_time = df_allti.iloc[n,p]  
+    #         this_measr_time = df_allti.iloc[n,p]  
 
-            ### LABELS! #################          
-            ## Time - will be pickling!
-            this_measr_timeuptoseconds = this_measr_time[0:-7] # NOTE: ground truth is per second but has no resolution for 'subseconds'
+    #         ### LABELS! #################          
+    #         ## Time - will be pickling!
+    #         this_measr_timeuptoseconds = this_measr_time[0:-7] # NOTE: ground truth is per second but has no resolution for 'subseconds'
             
-            if not isinstance(this_measr_timeuptoseconds, str):
-                this_measr_timeuptoseconds = this_measr_timeuptoseconds.decode('utf-8')      
+    #         if not isinstance(this_measr_timeuptoseconds, str):
+    #             this_measr_timeuptoseconds = this_measr_timeuptoseconds.decode('utf-8')      
 
-            ## Get respective row from GT_LOC_CSV            
-            matched_row_ingt = gt_loc_df[gt_loc_df['Time (UTC)'].str.contains(this_measr_timeuptoseconds)]           
+    #         ## Get respective row from GT_LOC_CSV            
+    #         matched_row_ingt = gt_loc_df[gt_loc_df['Time (UTC)'].str.contains(this_measr_timeuptoseconds)]           
             
-            ##########################
-            if len(matched_row_ingt) == 0:
-                nogpsgt+=1
-                print(f'Somehow bus didnt record {n}th GPS measurment ground truth for this row', n, "so not storing!\n")
-                break # shouldnt go to the next p so no continue!
-                ##########################
+    #         ##########################
+    #         if len(matched_row_ingt) == 0:
+    #             nogpsgt+=1
+    #             print(f'Somehow bus didnt record {n}th GPS measurment ground truth for this row', n, "so not storing!\n")
+    #             break # shouldnt go to the next p so no continue!
+    #             ##########################
             
-            # Location - will be pickling!
-            current_bus_pos_tuple = (matched_row_ingt['Lat'].values[0],matched_row_ingt['Lon'].values[0])
+    #         # Location - will be pickling!
+    #         current_bus_pos_tuple = (matched_row_ingt['Lat'].values[0],matched_row_ingt['Lon'].values[0])
 
-            # Speed  - will be pickling!
-            this_speed = matched_row_ingt['Speed (meters/sec)']
+    #         # Speed  - will be pickling!
+    #         this_speed = matched_row_ingt['Speed (meters/sec)']
             
-            # Direction  - will be pickling!
-            direction_w_TN = matched_row_ingt['Track'].values[0] if any(colname == 'Track' for colname in matched_row_ingt.columns.values) else 0
-            ####################################
+    #         # Direction  - will be pickling!
+    #         direction_w_TN = matched_row_ingt['Track'].values[0] if any(colname == 'Track' for colname in matched_row_ingt.columns.values) else 0
+    #         ####################################
 
-            ## IQ DATA! ##################
-            this_measurement  = df_allrx.iloc[n,p]
+    #         ## IQ DATA! ##################
+    #         this_measurement  = df_allrx.iloc[n,p]
             
-            if CFO_REMOVE_FLAG:
-                ##remove cfo            
-                this_measurement, cfo_approx, cfomthd_forthismsrmnt = do_cfo_removal(cfo_summary_dict, degreeforfitting, this_measr_timeuptoseconds, df_allrx.columns[p], this_measurement, rate)
+    #         if CFO_REMOVE_FLAG:
+    #             ##remove cfo            
+    #             this_measurement, cfo_approx, cfomthd_forthismsrmnt = do_cfo_removal(cfo_summary_dict, degreeforfitting, this_measr_timeuptoseconds, df_allrx.columns[p], this_measurement, rate)
 
-            ####################################
-            # full spectrum 
-            [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
+    #         ####################################
+    #         # full spectrum 
+    #         [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
             
-            # narrowed spectrum indexes 
-            fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
+    #         # narrowed spectrum indexes 
+    #         fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
 
-            # narrowed spectrum - will be pickling!
-            data_and_label_dict[df_allrx.columns[p]].append(full_spectrum[fdidx])
-
-
-            ####################################
-            # fig_plt = plt.figure("fig_pltfunction")
-            # [pxxc_linear, freq_full] = plt.psd(this_measurement, NFFT= nsamps, Fs = rate)          ## pxxc_DB, pxxc_linear, fxxc = psdcalc(corrected_signal, rate)
-            # plt.close("fig_pltfunction")  
-
-            # ## narrowed spectrum indexes 
-            # fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
-
-            # data_and_label_dict[df_allrx.columns[p]].append(pxxc_linear[fdidx])
+    #         # narrowed spectrum - will be pickling!
+    #         data_and_label_dict[df_allrx.columns[p]].append(full_spectrum[fdidx])
 
 
-            ####################################
+    #         ####################################
+    #         # fig_plt = plt.figure("fig_pltfunction")
+    #         # [pxxc_linear, freq_full] = plt.psd(this_measurement, NFFT= nsamps, Fs = rate)          ## pxxc_DB, pxxc_linear, fxxc = psdcalc(corrected_signal, rate)
+    #         # plt.close("fig_pltfunction")  
 
-            ## labelling here! Labels are to be stored as the last column
-            if p==n_endpoints_is_subplots-1: # when at the last Rx's index, that is only after the last BS has been picked, we store loc, speed, track, and time in their respective columns
-                data_and_label_dict["speed_postuple"].append([this_speed.values[0], direction_w_TN, current_bus_pos_tuple, this_measr_timeuptoseconds])
+    #         # ## narrowed spectrum indexes 
+    #         # fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
+
+    #         # data_and_label_dict[df_allrx.columns[p]].append(pxxc_linear[fdidx])
+
+
+    #         ####################################
+
+    #         ## labelling here! Labels are to be stored as the last column
+    #         if p==n_endpoints_is_subplots-1: # when at the last Rx's index, that is only after the last BS has been picked, we store loc, speed, track, and time in their respective columns
+    #             data_and_label_dict["speed_postuple"].append([this_speed.values[0], direction_w_TN, current_bus_pos_tuple, this_measr_timeuptoseconds])
                         
-            #####################################
+    #         #####################################
             
-            if plott:# and p==4:
-                # f=0 #p
+    #         if plott:# and p==4:
+    #             # f=0 #p
 
-                f_ns              = freq_full[fdidx]      
-                psdln_ns          = np.nan_to_num(np.square(np.abs(full_spectrum[fdidx])))
-                psdDB_ns          = np.nan_to_num(10.0 *np.log10(psdln_ns))  
-                aa_psd_max        = psdDB_ns[np.argmax(psdDB_ns)]
+    #             f_ns              = freq_full[fdidx]      
+    #             psdln_ns          = np.nan_to_num(np.square(np.abs(full_spectrum[fdidx])))
+    #             psdDB_ns          = np.nan_to_num(10.0 *np.log10(psdln_ns))  
+    #             aa_psd_max        = psdDB_ns[np.argmax(psdDB_ns)]
 
-                # ax[f].clear()
-                # ax[f].plot(f_ns, psdDB_ns, '-o',color = 'r' if this_speed.values[0]==0 else 'g', label = f"{n}th FP at {df_allrx.columns[p].split('-')[1]}")
+    #             # ax[f].clear()
+    #             # ax[f].plot(f_ns, psdDB_ns, '-o',color = 'r' if this_speed.values[0]==0 else 'g', label = f"{n}th FP at {df_allrx.columns[p].split('-')[1]}")
                 
-                if aa_psd_max > pwr_threshold:
-                    rmsis = rmsfunction(psdDB_ns, psdln_ns, f_ns, pwr_threshold)
+    #             if aa_psd_max > pwr_threshold:
+    #                 rmsis = rmsfunction(psdDB_ns, psdln_ns, f_ns, pwr_threshold)
                     
-                    rmsdict[df_allrx.columns[p]].append([rmsis, this_speed.values[0], this_measr_timeuptoseconds, matched_row_ingt.iloc[0][3:5][0], matched_row_ingt.iloc[0][3:5][1] , calcDistLatLong( all_BS_coords[df_allrx.columns[p].split('-')[1]], matched_row_ingt.iloc[0][3:5] )])
-                    """
-                    rms_at = AnchoredText(f"RMS:{round(rmsis,2)} Hz\nSpeed:{round(this_speed.values[0],1)} mps", prop=dict(size=8), frameon=True,pad=0.1, loc='upper left')  #\nMax. noise:{round(pwr_threshold,2)}
-                    rms_at.patch.set_boxstyle("round, pad=0.,rounding_size=0.2")
+    #                 rmsdict[df_allrx.columns[p]].append([rmsis, this_speed.values[0], this_measr_timeuptoseconds, matched_row_ingt.iloc[0][3:5][0], matched_row_ingt.iloc[0][3:5][1] , calcDistLatLong( all_BS_coords[df_allrx.columns[p].split('-')[1]], matched_row_ingt.iloc[0][3:5] )])
+    #                 """
+    #                 rms_at = AnchoredText(f"RMS:{round(rmsis,2)} Hz\nSpeed:{round(this_speed.values[0],1)} mps", prop=dict(size=8), frameon=True,pad=0.1, loc='upper left')  #\nMax. noise:{round(pwr_threshold,2)}
+    #                 rms_at.patch.set_boxstyle("round, pad=0.,rounding_size=0.2")
                    
-                    ax[f].add_artist(rms_at)
+    #                 ax[f].add_artist(rms_at)
         
 
 
-                ax[f].axhline(y = pwr_threshold, lw=1, ls='--', c='k', label= f"Noise Threshold: {pwr_threshold}") #\nEst. CFO: {round(cfo_approx,2)} Hz
-                ax[f].legend(loc="lower left")
-                ax[f].set_ylim(-80,20)
+    #             ax[f].axhline(y = pwr_threshold, lw=1, ls='--', c='k', label= f"Noise Threshold: {pwr_threshold}") #\nEst. CFO: {round(cfo_approx,2)} Hz
+    #             ax[f].legend(loc="lower left")
+    #             ax[f].set_ylim(-80,20)
                 
-                ax[f].set_xlim(f_ns[0],f_ns[-1])
-                ax[f].set_xlabel("Freq (Hz)")  
-                ax[f].set_ylabel("Power (dB)")
+    #             ax[f].set_xlim(f_ns[0],f_ns[-1])
+    #             ax[f].set_xlabel("Freq (Hz)")  
+    #             ax[f].set_ylabel("Power (dB)")
                 
 
-                """                
-                # lat_y_40s, long_x_11s =  matched_row_ingt.iloc[0][3], matched_row_ingt.iloc[0][4]
-                # # ax[1].scatter( long_x_11s, lat_y_40s, c='k', marker='o', s=10)
-                # easting_lngs_x, northing_lats_y = utm.from_latlon(lat_y_40s, long_x_11s)[0:2]
-                # print( easting_lngs_x, northing_lats_y)
-                # ax[5].scatter(easting_lngs_x, northing_lats_y, c='k', marker='o', s=10, label= f"Curent Speed: {round(this_speed.values[0],1)} mps")
+    #             """                
+    #             # lat_y_40s, long_x_11s =  matched_row_ingt.iloc[0][3], matched_row_ingt.iloc[0][4]
+    #             # # ax[1].scatter( long_x_11s, lat_y_40s, c='k', marker='o', s=10)
+    #             # easting_lngs_x, northing_lats_y = utm.from_latlon(lat_y_40s, long_x_11s)[0:2]
+    #             # print( easting_lngs_x, northing_lats_y)
+    #             # ax[5].scatter(easting_lngs_x, northing_lats_y, c='k', marker='o', s=10, label= f"Curent Speed: {round(this_speed.values[0],1)} mps")
 
-                # ax[5].legend(loc='upper left')
+    #             # ax[5].legend(loc='upper left')
 
-                # ax[1][0].clear()
-                # [full_spectrum, freq_full]   = get_full_DS_spectrum(df_allrx.iloc[n,p], rate)
+    #             # ax[1][0].clear()
+    #             # [full_spectrum, freq_full]   = get_full_DS_spectrum(df_allrx.iloc[n,p], rate)
                 
-                # if CFO_REMOVE_FLAG:
-                #     ax[1][0].plot(freq_full[(freq_full >= -lpf_fc) & ( freq_full <= lpf_fc) ], np.nan_to_num(10.0 *np.log10((np.square(np.abs(full_spectrum[(freq_full >= -lpf_fc) & ( freq_full <=lpf_fc ) ]))))),   color = 'r' if this_speed.values[0]==0 else 'g', label="full spec after cfo removed")         
-                # else:
-                #     ax[1][0].plot(freq_full[(freq_full >= -ns) & ( freq_full <=ns ) ], np.nan_to_num(10.0 *np.log10((np.square(np.abs(full_spectrum[(freq_full >= -ns) & ( freq_full <=ns) ]))))),  color = 'r' if this_speed.values[0]==0 else 'g', label="full spec after cfo removed")
+    #             # if CFO_REMOVE_FLAG:
+    #             #     ax[1][0].plot(freq_full[(freq_full >= -lpf_fc) & ( freq_full <= lpf_fc) ], np.nan_to_num(10.0 *np.log10((np.square(np.abs(full_spectrum[(freq_full >= -lpf_fc) & ( freq_full <=lpf_fc ) ]))))),   color = 'r' if this_speed.values[0]==0 else 'g', label="full spec after cfo removed")         
+    #             # else:
+    #             #     ax[1][0].plot(freq_full[(freq_full >= -ns) & ( freq_full <=ns ) ], np.nan_to_num(10.0 *np.log10((np.square(np.abs(full_spectrum[(freq_full >= -ns) & ( freq_full <=ns) ]))))),  color = 'r' if this_speed.values[0]==0 else 'g', label="full spec after cfo removed")
 
-                #     ax[1][0].legend(loc='upper left')
-                # ax[1][0].set_ylim(-80,20)
-                # ax[1][0].set_xlabel("Freq (hz)")
-                # ax[1][0].set_ylabel("Power (dB)")
+    #             #     ax[1][0].legend(loc='upper left')
+    #             # ax[1][0].set_ylim(-80,20)
+    #             # ax[1][0].set_xlabel("Freq (hz)")
+    #             # ax[1][0].set_ylabel("Power (dB)")
 
 
-                # ax[1][1].clear() # [ax[1][1].scatter(convert_strptime_to_currUTCtsdelta(v[1], cfo_summary_dict['exp_start_timestampUTC']), v[0], color='y')  for i, v in enumerate( cfo_summary_dict['allcfotime'][df_allrx.columns[p]] ) ]    
+    #             # ax[1][1].clear() # [ax[1][1].scatter(convert_strptime_to_currUTCtsdelta(v[1], cfo_summary_dict['exp_start_timestampUTC']), v[0], color='y')  for i, v in enumerate( cfo_summary_dict['allcfotime'][df_allrx.columns[p]] ) ]    
                 
-                # if CFO_REMOVE_FLAG: 
-                #     tts = []
-                #     ffs = []     
+    #             # if CFO_REMOVE_FLAG: 
+    #             #     tts = []
+    #             #     ffs = []     
 
-                #     if len(cfo_summary_dict['allcfotime'][df_allrx.columns[p]])!=0:
-                #         for eachfrq, eachtime in cfo_summary_dict['allcfotime'][df_allrx.columns[p]]:
-                #             delta_t_since_start = convert_strptime_to_currUTCtsdelta(eachtime, cfo_summary_dict['exp_start_timestampUTC'] )
-                #             tts.append(   delta_t_since_start  )
-                #             ffs.append(eachfrq)
+    #             #     if len(cfo_summary_dict['allcfotime'][df_allrx.columns[p]])!=0:
+    #             #         for eachfrq, eachtime in cfo_summary_dict['allcfotime'][df_allrx.columns[p]]:
+    #             #             delta_t_since_start = convert_strptime_to_currUTCtsdelta(eachtime, cfo_summary_dict['exp_start_timestampUTC'] )
+    #             #             tts.append(   delta_t_since_start  )
+    #             #             ffs.append(eachfrq)
                         
-                #         ax[1][1].plot(tts, ffs, '-o', c='#FFB6C1', label=f'all {len(ffs)} offsets')
+    #             #         ax[1][1].plot(tts, ffs, '-o', c='#FFB6C1', label=f'all {len(ffs)} offsets')
                         
-                #         xfit = np.linspace(min(tts), max(tts), 100)
+    #             #         xfit = np.linspace(min(tts), max(tts), 100)
                         
-                #         polynomia = np.poly1d(fit_freq_on_time(tts, ffs, degreeforfitting))                    
-                #         ax[1][1].plot(xfit, polynomia(xfit), c='b', label=f' {degreeforfitting}th deg polynomial')  
-                #         ax[1][1].scatter(convert_strptime_to_currUTCtsdelta(this_measr_timeuptoseconds, cfo_summary_dict['exp_start_timestampUTC']) , cfo_approx ,  marker='*', s=50 ,  color='r' if this_speed.values[0]==0 else 'g', label = f"CFO: {round(cfo_approx,2)}at {df_allrx.columns[p].split('-')[1]}")             
-                #         ax[1][1].legend(loc='upper right')
-                #         ax[1][1].set_ylim(6600, 6999)
-                #         ax[1][1].set_xlabel("Time spent (s)")
-                #         ax[1][1].set_ylabel("Freq offset (Hz)")
-                """
+    #             #         polynomia = np.poly1d(fit_freq_on_time(tts, ffs, degreeforfitting))                    
+    #             #         ax[1][1].plot(xfit, polynomia(xfit), c='b', label=f' {degreeforfitting}th deg polynomial')  
+    #             #         ax[1][1].scatter(convert_strptime_to_currUTCtsdelta(this_measr_timeuptoseconds, cfo_summary_dict['exp_start_timestampUTC']) , cfo_approx ,  marker='*', s=50 ,  color='r' if this_speed.values[0]==0 else 'g', label = f"CFO: {round(cfo_approx,2)}at {df_allrx.columns[p].split('-')[1]}")             
+    #             #         ax[1][1].legend(loc='upper right')
+    #             #         ax[1][1].set_ylim(6600, 6999)
+    #             #         ax[1][1].set_xlabel("Time spent (s)")
+    #             #         ax[1][1].set_ylabel("Freq offset (Hz)")
+    #             """
 
-                ax[l].clear()
+    #             ax[l].clear()
 
-                # shax = ax[l].get_shared_x_axes()
-                # shay = ax[l].get_shared_y_axes()
+    #             # shax = ax[l].get_shared_x_axes()
+    #             # shay = ax[l].get_shared_y_axes()
                 
-                # shax.remove(ax[l])
-                # shay.remove(ax[l])
+    #             # shax.remove(ax[l])
+    #             # shay.remove(ax[l])
 
 
-                # ax[l].xaxis.major = matplotlib.axis.Ticker()
-                # xloc = matplotlib.ticker.AutoLocator()
-                # xfmt = matplotlib.ticker.ScalarFormatter()
-                # ax[l].xaxis.set_major_locator(xloc)
-                # ax[l].xaxis.set_major_formatter(xfmt)
+    #             # ax[l].xaxis.major = matplotlib.axis.Ticker()
+    #             # xloc = matplotlib.ticker.AutoLocator()
+    #             # xfmt = matplotlib.ticker.ScalarFormatter()
+    #             # ax[l].xaxis.set_major_locator(xloc)
+    #             # ax[l].xaxis.set_major_formatter(xfmt)
 
-                # ax[l].yaxis.major = matplotlib.axis.Ticker()
-                # yloc = matplotlib.ticker.AutoLocator()
-                # yfmt = matplotlib.ticker.ScalarFormatter()
-                # ax[l].yaxis.set_major_locator(yloc)
-                # ax[l].yaxis.set_major_formatter(yfmt)
+    #             # ax[l].yaxis.major = matplotlib.axis.Ticker()
+    #             # yloc = matplotlib.ticker.AutoLocator()
+    #             # yfmt = matplotlib.ticker.ScalarFormatter()
+    #             # ax[l].yaxis.set_major_locator(yloc)
+    #             # ax[l].yaxis.set_major_formatter(yfmt)
                 
-                if ff in [6,7,18,19,20]:
-                    routeclr = '#ffb16d'
-                    routename = 'B'
-                else:
-                    routeclr = '#33b864' #'#2a7e19' #
-                    routename = 'A'
+    #             if ff in [6,7,18,19,20]:
+    #                 routeclr = '#ffb16d'
+    #                 routename = 'B'
+    #             else:
+    #                 routeclr = '#33b864' #'#2a7e19' #
+    #                 routename = 'A'
 
-                alllocs_df.iloc[:2000].plot.scatter(x=0, y=1, c=routeclr, marker='.', s=2, ax=ax[l], label='route ')#+f"{routename}") ########[ax[l].scatter( utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][0],utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][1], marker='1', s=100, label= bs.split('-')[1][:3] ) for bs in df_allrx.columns.values] 
-                [ax[l].scatter( utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][0], utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][1], marker='1', c='C{}'.format(uu+103), s=100, label= bs.split('-')[1][:3] ) for uu, bs in enumerate(df_allrx.columns.values)]  #FFB6C1, #ffb16d
+    #             alllocs_df.iloc[:2000].plot.scatter(x=0, y=1, c=routeclr, marker='.', s=2, ax=ax[l], label='route ')#+f"{routename}") ########[ax[l].scatter( utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][0],utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][1], marker='1', s=100, label= bs.split('-')[1][:3] ) for bs in df_allrx.columns.values] 
+    #             [ax[l].scatter( utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][0], utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][1], marker='1', c='C{}'.format(uu+103), s=100, label= bs.split('-')[1][:3] ) for uu, bs in enumerate(df_allrx.columns.values)]  #FFB6C1, #ffb16d
                 
-                lat_y_40s, long_x_11s =  matched_row_ingt.iloc[0][3], matched_row_ingt.iloc[0][4] # ax[1].scatter( long_x_11s, lat_y_40s, c='k', marker='o', s=10)
-                easting_lngs_x, northing_lats_y = utm.from_latlon(lat_y_40s, long_x_11s)[0:2] # print("easting_lngs_x, northing_lats_y", easting_lngs_x, northing_lats_y, "\n")
+    #             lat_y_40s, long_x_11s =  matched_row_ingt.iloc[0][3], matched_row_ingt.iloc[0][4] # ax[1].scatter( long_x_11s, lat_y_40s, c='k', marker='o', s=10)
+    #             easting_lngs_x, northing_lats_y = utm.from_latlon(lat_y_40s, long_x_11s)[0:2] # print("easting_lngs_x, northing_lats_y", easting_lngs_x, northing_lats_y, "\n")
                          
-                ax[l].scatter(easting_lngs_x, northing_lats_y, c='k', marker='*', s=12, label="loc" ) #, label= f"|v|:{round(this_speed.values[0],1)} mps"  # [ax[l].scatter( utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][0], utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][1] , marker='1', s=100, label= bs.split('-')[1] )    for bs in df_allrx.columns.values]
+    #             ax[l].scatter(easting_lngs_x, northing_lats_y, c='k', marker='*', s=12, label="loc" ) #, label= f"|v|:{round(this_speed.values[0],1)} mps"  # [ax[l].scatter( utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][0], utm.from_latlon(all_BS_coords[bs.split('-')[1]][0], all_BS_coords[bs.split('-')[1]][1])[0:2][1] , marker='1', s=100, label= bs.split('-')[1] )    for bs in df_allrx.columns.values]
 
                 
-                sdf=900
+    #             sdf=900
 
-                """       
-                         # # # # ylim_u = max(np.array(yys))+sdf
-                        # # # # ylim_d = min(np.array(yys))-sdf
-                        # # # # xlim_r = max(np.array(xxs))+sdf
-                        # # # # xlim_l = min(np.array(xxs))-sdf
-                        # # # # print(ylim_u, ylim_d, xlim_r, xlim_l)
-                        # # # ax[1].yaxis.set_ticks([])
-                        # # # ax[2].yaxis.set_ticks([])
-                        # # # ax[3].yaxis.set_ticks([])
-                        # # # ax[4].yaxis.set_ticks([])
-                        # # # plt.suptitle(f'{n}/{n_total_measurements} Speed = {this_speed.values[0]} mps')                               
-                        # # # plt.suptitle(f'{n}/{n_total_measurements}, Est CFO by {cfomthd_forthismsrmnt}: {round(cfo_approx,2)} Hz, \n Speed: {this_speed.values[0]} mps,  {fnm}')                               
-                        # # # plt.figure("psdVsloc").savefig("./"+f"{n}_{fnm}"+"psdVsloc.pdf",format='pdf')
-                """
+    #             """       
+    #                      # # # # ylim_u = max(np.array(yys))+sdf
+    #                     # # # # ylim_d = min(np.array(yys))-sdf
+    #                     # # # # xlim_r = max(np.array(xxs))+sdf
+    #                     # # # # xlim_l = min(np.array(xxs))-sdf
+    #                     # # # # print(ylim_u, ylim_d, xlim_r, xlim_l)
+    #                     # # # ax[1].yaxis.set_ticks([])
+    #                     # # # ax[2].yaxis.set_ticks([])
+    #                     # # # ax[3].yaxis.set_ticks([])
+    #                     # # # ax[4].yaxis.set_ticks([])
+    #                     # # # plt.suptitle(f'{n}/{n_total_measurements} Speed = {this_speed.values[0]} mps')                               
+    #                     # # # plt.suptitle(f'{n}/{n_total_measurements}, Est CFO by {cfomthd_forthismsrmnt}: {round(cfo_approx,2)} Hz, \n Speed: {this_speed.values[0]} mps,  {fnm}')                               
+    #                     # # # plt.figure("psdVsloc").savefig("./"+f"{n}_{fnm}"+"psdVsloc.pdf",format='pdf')
+    #             """
 
-                [ea.grid(True) for ea in ax.flatten()]
+    #             [ea.grid(True) for ea in ax.flatten()]
 
-                xl = all_BS_coords_df.loc['bes'][3]-100
-                xh = all_BS_coords_df.loc['smt'][3]+600
+    #             xl = all_BS_coords_df.loc['bes'][3]-100
+    #             xh = all_BS_coords_df.loc['smt'][3]+600
 
-                yl = all_BS_coords_df.loc['bes'][2]-500
-                yh = all_BS_coords_df.loc['hospital'][2]+500
+    #             yl = all_BS_coords_df.loc['bes'][2]-500
+    #             yh = all_BS_coords_df.loc['hospital'][2]+500
 
-                # ax[l].set_xlim(429383-sdf, 429383+sdf-100)
-                # ax[l].set_ylim(4513165-sdf+100, 4513165+sdf)
+    #             # ax[l].set_xlim(429383-sdf, 429383+sdf-100)
+    #             # ax[l].set_ylim(4513165-sdf+100, 4513165+sdf)
 
-                ax[l].set_xlim(xl, xh)
-                ax[l].set_ylim(yl, yh)
+    #             ax[l].set_xlim(xl, xh)
+    #             ax[l].set_ylim(yl, yh)
 
-                # new_xticks = ax[l].get_xticks() - ax[l].get_xticks()[0]
-                # ax[l].set_xticks(new_xticks)
-                # ax[l].tick_params(axis='x', rotation=90)
+    #             # new_xticks = ax[l].get_xticks() - ax[l].get_xticks()[0]
+    #             # ax[l].set_xticks(new_xticks)
+    #             # ax[l].tick_params(axis='x', rotation=90)
 
-                xlbs = [i- ax[l].get_xticks()[1] for i in ax[l].get_xticks() ]
-                ax[l].set_xticklabels(xlbs)
-                ylbs = [i- ax[l].get_yticks()[1] for i in ax[l].get_yticks() ]
-                ax[l].set_yticklabels(ylbs)
+    #             xlbs = [i- ax[l].get_xticks()[1] for i in ax[l].get_xticks() ]
+    #             ax[l].set_xticklabels(xlbs)
+    #             ylbs = [i- ax[l].get_yticks()[1] for i in ax[l].get_yticks() ]
+    #             ax[l].set_yticklabels(ylbs)
                 
-                ax[l].yaxis.tick_right()
-                ax[l].yaxis.set_label_position("right")
-                ax[l].set_ylabel("UTM Northing (m)")
-                ax[l].set_xlabel("UTM Easting (m)")
-                ax[l].legend(loc='lower right')
-                plt.tight_layout()
+    #             ax[l].yaxis.tick_right()
+    #             ax[l].yaxis.set_label_position("right")
+    #             ax[l].set_ylabel("UTM Northing (m)")
+    #             ax[l].set_xlabel("UTM Easting (m)")
+    #             ax[l].legend(loc='lower right')
+    #             plt.tight_layout()
                 
-                # plt.draw()
-                # plt.pause(0.01)
+    #             # plt.draw()
+    #             # plt.pause(0.01)
                 
-                plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}"+"psdVsloc.pdf",format='pdf')
-                """         
+    #             plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}"+"psdVsloc.pdf",format='pdf')
+    #             """         
 
-        print("Rows traversed: %i/%i" %(n+1, n_total_measurements), end='\r')
+    #     print("Rows traversed: %i/%i" %(n+1, n_total_measurements), end='\r')
 
 
 
-    if plott:
-        # plt.ioff()
-        # plt.close("psdVsloc")
-        plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, overall_plots_dir, runtime)
-        my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
+    # if plott:
+    #     # plt.ioff()
+    #     # plt.close("psdVsloc")
+    #     # plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, overall_plots_dir, runtime)
+    #     # my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
     
 
     """
@@ -563,7 +563,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
     # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D7:  02-03-2023_12-55-47
     # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 6200: # D13: 02-14-2023_10-45-17
-    # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D14: 02-14-2023_12-48-02
+    # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 6100:  # D14: 02-14-2023_12-48-02
     # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 8300:  # D15: 02-14-2023_14-49-21
     if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5000:  # D21: 02-16-2023_16-59-03
 
@@ -609,11 +609,11 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     
 
     """
-    pdb.set_trace()
-    print(f'\nSize of a single spectrum : {len(freq_full[fdidx])}')
+
+    # print(f'\nSize of a single spectrum : {len(freq_full[fdidx])}')
 
     final_totallength = [len(val) for k, val in enumerate(data_and_label_dict.values()) ]
-    print("How many rows we got in this pickled data file", final_totallength, f"\nTotal {len(no_measr_time_idx_n) + nogpsgt} rows skipped" )
+    # print("How many rows we got in this pickled data file", final_totallength, f"\nTotal {len(no_measr_time_idx_n) + nogpsgt} rows skipped" )
     
     same_numb_rows = all(element == final_totallength[0] for element in final_totallength)   
     if same_numb_rows:

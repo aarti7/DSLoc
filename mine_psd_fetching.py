@@ -28,6 +28,7 @@ plt.rc('ytick', labelsize=8)
 
 
 
+
 names_to_ds_dict = {
 "01-30-2023_15-40-55":"D1",
 "01-30-2023_17-47-39":"D2",
@@ -53,8 +54,6 @@ names_to_ds_dict = {
 "02-16-2023_19-01-43":"D22",
 "02-16-2023_19-40-05":"D23",
 }
-
-
 
 
 
@@ -239,8 +238,17 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
     plt.legend(loc="upper left")
     plt.ylabel('RMS Doppler Spread (Hz)')
     plt.tight_layout()
+    print("RMS plots saved!")
     plt.figure("rmsall").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rmsall.pdf",format='pdf')
     plt.close("rmsall")    
+
+
+
+
+    """
+    RMS shows larger values at zero velocity as they are a function of environment that is Unmonitored/ Unmeasured.
+
+    """
 
     # fig_rmsper, axs_rmsper = plt.subplots(1, len(rmsdict.keys()),figsize=(12, 3), num = "rmsperbssep")  
     # for uu, kvp in enumerate(rmsdict.items()):
@@ -300,6 +308,11 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
             
             times.append(np.array(tt).max())
             lenn.append(len(vals))
+        else:
+            # pdb.set_trace()
+            plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")
+        
+
 
     bb = np.round(np.linspace(0, max(times), 10 ), 2)
     plt.xticks(bb, bb,  rotation=90)
@@ -308,6 +321,7 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     plt.ylabel("Frequency offset (Hz)")
     plt.grid(alpha=0.7)
     plt.tight_layout()
+    print("CFO plots saved!")
     plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
     

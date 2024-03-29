@@ -352,7 +352,7 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 # idx_psd_max = idx_psd_max_in_all_peaks_idxs_not_in_results
                  
 
-
+                # db scale!!! For experiemtn 2023-02-14 21:49:39
                 to_test = [139, 143, 144, 188, 189, 192, 254, 276, 289, 290, 291, 299, 365, 366, 414, 421, 426, 498, 499]
                 
 
@@ -408,6 +408,38 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                     # plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'go', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
 
 
+                
+                    # db scale!!! For experiemtn 2023-02-14 21:49:39
+
+                   	"""
+                   	left_bases, right_basesndarray: The peaks’ bases as indices in x to the left and right of each peak. The higher base of each pair is a peak’s lowest contour line.!checked this!
+                   	"""
+                   	listofidxsofresult_lin, pr=find_peaks(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), prominence=44)
+
+                   	plt.plot(freqs[pr['left_bases']],10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['left_bases']], 'k*')
+                   	plt.plot(freqs[pr['right_bases']],10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']], 'b*')
+                   	
+                   	print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin])
+                   	print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']]) (checked this here!) 
+					print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']] + pr['prominences'])
+					print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']] + pr['prominences'] == 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin])                    
+
+                    nn=276
+                    fig,ax=plt.subplots(num="pdb276")
+	                listofidxsofresult_lin, pr=find_peaks(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))))
+	                plt.ion(); plt.plot( freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'go', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(-60, 10); plt.show()
+
+                    nn=188
+                    fig,ax=plt.subplots(num="pdb188")
+	                listofidxsofresult_lin, pr=find_peaks(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))))
+	                plt.ion(); plt.plot( freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(-60, 10); plt.show()
+
+
+	                # only peaks,no signal
+					plt.ion(); plt.plot( freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'k>', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.show()
+                
+
+
 
 
                 # # print("freq offset is", val_freq_max, "max power is" , val_psd_max, n, p)
@@ -415,9 +447,6 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
   
                 # threshold = -21 #-23.5 # np.mean(result_fft_temp) + 3*np.std(result_fft_temp)
                 # if val_psd_max > threshold and val_freq_max < bus_frequency_offset_ranges[1] and val_freq_max > bus_frequency_offset_ranges[0]: # to ensure signal was indeed "seen"
-
-
-
 
 
                 # manually fixing for 5 fixables
