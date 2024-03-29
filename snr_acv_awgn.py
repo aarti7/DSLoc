@@ -435,7 +435,7 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 	                plt.ion(); plt.plot( freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(-60, 10); plt.show()
 
 
-	                # only peaks,no signal
+	                # plot only peaks,no signal
 					plt.ion(); plt.plot( freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'k>', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.show()
                 
 

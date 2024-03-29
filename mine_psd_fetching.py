@@ -276,7 +276,7 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
 
 
 
-def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runtime):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
+def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runtime, degreeforfitting):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
     marker_list=["o","s","P","^","*","x"]
 
     mean_frqoff_perrx_dict      = summary_cfo_dict['meanmethod']
@@ -296,21 +296,26 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     for i, kvp in enumerate(freqoff_time_dict.items()):
         vv=[]
         tt=[]
+        tt_unaltered=[]
         vals = kvp[1]
         if len(vals) != 0:
             for j in range(len(vals)):
                 vv.append(vals[j][0])
+                
                 delta_t_since_start = convert_strptime_to_currUTCtsdelta(vals[j][1], exp_start_timestampUTC)
                 tt.append(   round(delta_t_since_start/3600 , 2) ) 
-            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")
-        
-            # plt.xticks(tt, tt, rotation=90)
+                tt_unaltered.append(   delta_t_since_start  )
+
+            xfit = np.linspace(min(tt_unaltered), max(tt_unaltered), 100)
+            polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting)) 
+            plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting}rd deg. polynomial fit') 
             
+            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.9-(.1*i), marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")            
             times.append(np.array(tt).max())
             lenn.append(len(vals))
         else:
-            # pdb.set_trace()
             plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")
+            plt.plot([], [], label=f'No fitting done') 
         
 
 

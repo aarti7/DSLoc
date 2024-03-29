@@ -172,8 +172,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ### calling the function for cfo calculation #############################
         cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(f"{args.dirdata}".split('meas_')[1], df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
 
-        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}')
-        # pdb.set_trace()
+        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}', degreeforfitting)
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -569,12 +568,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
 
 
-    2 unfixables!
+    2 unfixables! Tried the linear methods.. detail in snr_acv_awgn.py get_cfo function
     Shout_meas_02-09-2023_15-08-10, Shout_meas_02-09-2023_17-12-28
-
-)
-    
-
     Shout_meas_01-30-2023_15-40-55 (multiple, first picked which was smaller)
 
     The CFO, that is the offest between the mobile transmitter's carrier frequency and the frequency of a receiver base-station,
