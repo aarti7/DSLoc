@@ -170,9 +170,10 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ##lengthy df traversal 1 to get cfo ###################################################################
         
         ### calling the function for cfo calculation #############################
+        # cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2, cfo_mthd, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(f"{args.dirdata}".split('meas_')[1], df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
         cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(f"{args.dirdata}".split('meas_')[1], df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
 
-        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}', degreeforfitting )
+        plot_all_off_dictionaries(ff, f"{args.dirdata}".split('meas_')[1], cfo_summary_dict, "./", f'{int(time.time())}', degreeforfitting , cfo_mthd)
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -695,9 +696,9 @@ if __name__ == "__main__":
             
             
             
-            # if ff<14:
-            #     print("ff is in the if loop", ff)
-            #     continue
+            if ff<10:
+                print("ff is in the if loop", ff)
+                continue
 
             dsfile = h5py.File("%s/%s" % (args.dirdata, args.hdf5name), "r")
             dsfile_with_meas_root = dsfile[MEAS_ROOT]

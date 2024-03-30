@@ -192,6 +192,95 @@ def plot_sig(this_measurement, this_measurement_after_LPF, corrected_signal_with
     plt.show()
 
 
+def plots_to_investigate_snr_and_thresholds(p,n,df_allrx, freqs,result_fft_lin,listofidxsofresult_lin, lpf_fc, fsr,this_speed,val_freq_max, meanwithin_spectrum, pwr_thrs_lin_promienence):
+
+    if True: #p==1:# and n in to_test:
+        # plt.clf()
+        # print(mxpsd, "at", frq_mxpsd) 
+
+        print(n, "len=", len(listofidxsofresult_lin) )# ,round(val_freq_max,2), round(val_psd_max,2))
+        print(f"#Peaks: {len(listofidxsofresult_lin)}, freq offset is", round(val_freq_max,3), "max power is", round(val_psd_max,3), "n=",n, "p=",p)
+
+        plt.plot(freqs, result_fft_lin, label=f"{n}{df_allrx.columns[p][9:12]}. frq({val_freq_max})", color = 'r' if this_speed.values[0] ==0 else 'g') #\n mean{np.mean(result_fft_temp_db)} \n max {val_psd_max}  \n
+        # plt.axhline(y = pwr_threshold, color = 'b', linestyle = '-') 
+        plt.plot(freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], \
+            'o', color='g', label=f'number of Peaks: {len(listofidxsofresult_lin)}')
+        # plt.scatter(val_freq_max, val_psd_max, marker='o', s=100,  color='g', label=f'max at {val_freq_max}')
+        # plt.ylim(-60, 10)
+        plt.axhline(y = np.mean(result_fft_lin), color = 'm', linestyle = '-', lw=5); plt.axhline(y = meanwithin_spectrum, color = 'g', linestyle = '-', lw=5) ; plt.axhline(y = pwr_thrs_lin_promienence, color = 'b', linestyle = '-', lw=5) 
+
+        plt.xlim(0, 10000)
+        plt.ylim(0, 0.04)
+        plt.legend(loc='upper left')
+        plt.grid(True)
+        plt.title('speed = zero')
+        plt.show()
+
+
+        # To regerenrate the plot in pdb
+
+        #####  only signal, no peaks!
+        fig,ax=plt.subplots(num="mine_linear1"); plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', label=f'{n}{df_allrx.columns[p][9:12]}'); plt.legend(loc='upper left'); plt.axhline(y = np.mean(result_fft_lin), color = 'm', linestyle = '--'); plt.axhline(y = meanwithin_spectrum, color = 'g', linestyle = '--' ) ; plt.axhline(y = pwr_thrs_lin_promienence, color = 'b', linestyle = '--'); plt.grid(True); plt.xlim(-lpf_fc, lpf_fc); plt.ylim(0, 0.04); plt.show()
+
+        
+
+
+        ###### signal AND peaks!
+        fig,ax=plt.subplots(num="mine2")
+        plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'bx', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+        # color black
+        plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'k^', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+        # color yellow
+        plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'y^', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+
+
+
+
+
+        ######  To plot any random nth smapl!
+        fig,ax=plt.subplots(num="mine3")
+        nn=to_test[1]
+        listofidxsofresult_lin, _= find_peaks(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), threshold=fpk_thr, distance=fpk_dst)                       
+        ###### color blue
+        plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+        ######  color green
+        plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'go', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+
+
+
+        ######  db scale!!! For experiemtn 2023-02-14 21:49:39
+
+        """
+        left_bases, right_basesndarray: The peaks’ bases as indices in x to the left and right of each peak. The higher base of each pair is a peak’s lowest contour line.!checked this!
+        """
+        listofidxsofresult_lin, pr=find_peaks(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), prominence=44)
+
+        plt.plot(freqs[pr['left_bases']],10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['left_bases']], 'k*')
+        plt.plot(freqs[pr['right_bases']],10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']], 'b*')
+        
+        print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin])
+        print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']]) (checked this here!) 
+        print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']] + pr['prominences'])
+        print(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[pr['right_bases']] + pr['prominences'] == 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin])                    
+
+        nn=276
+        fig,ax=plt.subplots(num="pdb276")
+        listofidxsofresult_lin, pr=find_peaks(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))))
+        plt.ion(); plt.plot( freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'go', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(-60, 10); plt.show()
+
+        nn=188
+        fig,ax=plt.subplots(num="pdb188")
+        listofidxsofresult_lin, pr=find_peaks(10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))))
+        plt.ion(); plt.plot( freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(-60, 10); plt.show()
+
+
+        ######  only peaks,no signal
+        plt.ion(); plt.plot( freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'k>', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.show()
+        ### linear!!
+        plt.ion(); plt.plot( freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'k>', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.show()
+
+
+
 
 def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold):
     '''
@@ -276,13 +365,11 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
             fpk_thr  = 0.0007 #0.001 ### the vertical distance to its neighboring samples
             fpk_dst  = 10    #300 # fpk_height = 0.002
             fpk_prom = .001 #3 #30 # the vertical distance between the peak and its lowest contour line
-
-
             """
-            by limiting the allowed prominence to this values!!!"""#<<<<<<<<<<<<<<#THIS IS WRONG WORDING/Example on https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html!
+            by limiting the allowed prominence to this values!!!#<<<<<<<<<<<<<<#THIS IS WRONG WORDING/Example on https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.find_peaks.html!
             # when I set prominence=0.002 result was in following pdb output!
            
-            """ (Pdb) pr["prominences"].max()
+            (Pdb) pr["prominences"].max()
                 0.00428507406004766
                 (Pdb) pr["prominences"]
                 array([0.00242277, 0.00249285, 0.00223176, 0.00202951, 0.00216404,
@@ -300,10 +387,12 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
             # prominence is like how many samples are maximumally this much away from baseline can one go....kinda like elastic band away from baseline! kinda like sweeping the floor .. not really getting the tops!
 
             """
-
-
-            
             ##########################
+
+
+
+
+             
             if this_speed.values[0] == 0: # to ensure only for cases  when there was no motion. 
                 
                 this_measurement  = df_allrx.iloc[n,p]
@@ -312,11 +401,12 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 result_fft,      freqs     = get_full_DS_spectrum(this_measurement, fsr)
                 result_fft_lin             = np.nan_to_num(np.square(np.abs(result_fft))) 
 
-                # both/all condition have to be true at the same time!
-                pwr_threshold_is_lin_promienence = 0.004
-                listofidxsofresult_lin, _  = find_peaks(result_fft_lin, threshold=fpk_thr, distance=fpk_dst)       # prominence=fpk_prom, distance=300)# threshold=0.001)# prominence=3)# height = 0.002)# threshold=0.001)#, prominence=30)   #Returns:Indices of peaks in x that satisfy all given conditions. # (Pdb) idxs[[0,-1]]# array([     2, 131070])
-                
-                if len(listofidxsofresult_lin) ==0: # if len(listofidxsofresult_lin) >=200:
+                pwr_thrs_lin_promienence = 0.004 # all conditions have to be true at the same time!
+
+                # listofidxsofresult_lin, _  = find_peaks(result_fft_lin, threshold=fpk_thr, distance=fpk_dst)       # prominence=fpk_prom, distance=300)# threshold=0.001)# prominence=3)# height = 0.002)# threshold=0.001)#, prominence=30)   #Returns:Indices of peaks in x that satisfy all given conditions. # (Pdb) idxs[[0,-1]]# array([     2, 131070])
+                listofidxsofresult_lin, _  = find_peaks(result_fft_lin, prominence=pwr_thrs_lin_promienence)
+
+                if len(listofidxsofresult_lin) ==0:             # if len(listofidxsofresult_lin) >=200:
                     pdb.set_trace()
                     break
 
@@ -352,13 +442,13 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 # idx_psd_max = idx_psd_max_in_all_peaks_idxs_not_in_results
                  
 
-                # db scale!!! For experiemtn 2023-02-14 21:49:39
-                to_test = [139, 143, 144, 188, 189, 192, 254, 276, 289, 290, 291, 299, 365, 366, 414, 421, 426, 498, 499]
+                #For experiemtn 2023-02-14 14:49:39
+                # to_test = [139, 143, 144, 188, 189, 192, 254, 276, 289, 290, 291, 299, 365, 366, 414, 421, 426, 498, 499]
                 
 
 
                 # if p==0:# and len(listofidxsofresult_lin) <=50:# and n >=133:# in [12, 28, 64, 262, 263, 270, 273, 356]:
-                if p==1:# and n in to_test:
+                if True: #p==1:# and n in to_test:
                     # plt.clf()
                     # print(mxpsd, "at", frq_mxpsd) 
 
@@ -371,6 +461,7 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                         'o', color='g', label=f'number of Peaks: {len(listofidxsofresult_lin)}')
                     # plt.scatter(val_freq_max, val_psd_max, marker='o', s=100,  color='g', label=f'max at {val_freq_max}')
                     # plt.ylim(-60, 10)
+                    plt.axhline(y = pwr_threshold, color = 'b', linestyle = '-') 
                     plt.xlim(0, 10000)
                     plt.ylim(0, 0.04)
                     plt.legend(loc='upper left')
@@ -380,36 +471,38 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 
 
 
-                    # plt.pause(0.1)
-                    # plot(x1, y1, 'g^', x2, y2, 'g-')
-                    # !import code; code.interact(local=vars())
+                    plt.pause(0.1)
+                    ##### plot(x1, y1, 'g^', x2, y2, 'g-')
+                    ##### !import code; code.interact(local=vars())
                     
 
-                    # pdb.set_trace()
-                    # # To regerenrate the plot in pdb
-                    # fig,ax=plt.subplots(num="mine2")
-                    # plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'bx', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
-                    # # color black
-                    # plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'k^', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
-                    # # color yellow
-                    # plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'y^', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+                    pdb.set_trace()
+
+
+                    # To regerenrate the plot in pdb
+                    fig,ax=plt.subplots(num="mine2")
+                    plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'bx', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+                    # color black
+                    plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'k^', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+                    # color yellow
+                    plt.ion(); plt.plot(freqs, result_fft_lin, 'r-', freqs[listofidxsofresult_lin], result_fft_lin[listofidxsofresult_lin], 'y^', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks:{len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
 
 
 
 
 
-                    # # To plot any random nth smapl!
-                    # fig,ax=plt.subplots(num="mine3")
-                    # nn=to_test[1]
-                    # listofidxsofresult_lin, _= find_peaks(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), threshold=fpk_thr, distance=fpk_dst)                       
-                    # # color blue
-                    # plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
-                    # # color green
-                    # plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'go', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+                    ######  To plot any random nth smapl!
+                    fig,ax=plt.subplots(num="mine3")
+                    nn=to_test[1]
+                    listofidxsofresult_lin, _= find_peaks(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), threshold=fpk_thr, distance=fpk_dst)                       
+                    ###### color blue
+                    plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
+                    ######  color green
+                    plt.ion(); plt.plot(freqs, np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))), 'r-', freqs[listofidxsofresult_lin], np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))[listofidxsofresult_lin], 'go', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(0, 0.04); plt.show()
 
 
                 
-                    # db scale!!! For experiemtn 2023-02-14 21:49:39
+                    ######  db scale!!!
 
                    	"""
                    	left_bases, right_basesndarray: The peaks’ bases as indices in x to the left and right of each peak. The higher base of each pair is a peak’s lowest contour line.!checked this!
@@ -435,19 +528,22 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
 	                plt.ion(); plt.plot( freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'bx', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.xlim(0, 10000); plt.ylim(-60, 10); plt.show()
 
 
-	                # only peaks,no signal
+	                ######  only peaks,no signal
 					plt.ion(); plt.plot( freqs[listofidxsofresult_lin], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[nn,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_lin], 'k>', label=f'{nn}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_lin)}'); plt.legend(loc='upper left'); plt.grid(True); plt.show()
                 
 
 
 
 
+                ######  to ensure signal was indeed "seen"
+                
+                if  val_psd_max > pwr_threshold_is_lin_promienence and val_freq_max < lpf_fc and val_freq_max > 0: 
+
                 # # print("freq offset is", val_freq_max, "max power is" , val_psd_max, n, p)
                 # # print("mean of psd is", np.mean(result_fft_temp_db), "std is", np.std(result_fft_temp_db), "3times std of psd is", 3*np.std(result_fft_temp_db))
   
                 # threshold = -21 #-23.5 # np.mean(result_fft_temp) + 3*np.std(result_fft_temp)
                 # if val_psd_max > threshold and val_freq_max < bus_frequency_offset_ranges[1] and val_freq_max > bus_frequency_offset_ranges[0]: # to ensure signal was indeed "seen"
-
 
                 # manually fixing for 5 fixables
                 # if val_psd_max > pwr_threshold and val_freq_max < 8000 and val_freq_max > 5600:  # D7:  02-03-2023_12-55-47
@@ -456,9 +552,7 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 8300:  # D15: 02-14-2023_14-49-21<<
                 # if val_psd_max > pwr_threshold and val_freq_max < 10000 and val_freq_max > 5000:  # D21: 02-16-2023_16-59-03
 
-                # to ensure signal was indeed "seen"
-                
-                if  val_psd_max > pwr_threshold_is_lin_promienence and val_freq_max < lpf_fc and val_freq_max > 0: 
+
                     # print("meanPSD:", round(np.mean(result_fft_db),3), "stdPSD:", round(np.std(result_fft_db),3), "3timesstdPSD:", round(3*np.std(result_fft_db),3))
                     # print(f"#Peaks: {len(listofidxsofresult_lin)}, freq offset is", round(val_freq_max,3), "max power is", round(val_psd_max,3), "n=",n, "p=",p)
 

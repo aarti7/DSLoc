@@ -276,7 +276,7 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
 
 
 
-def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runtime, degreeforfitting):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
+def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runtime, degreeforfitting, cfo_mthd):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
     marker_list=["o","s","P","^","*","x"]
 
     mean_frqoff_perrx_dict      = summary_cfo_dict['meanmethod']
@@ -309,13 +309,13 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
 
             xfit = np.linspace(min(tt_unaltered), max(tt_unaltered), 100)
             polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting)) 
+            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.9-(.1*i), marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs")            
             plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting}rd deg. polynomial fit') 
-            
-            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.9-(.1*i), marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")            
             times.append(np.array(tt).max())
-            lenn.append(len(vals))
+            # lenn.append(len(vals))
+        
         else:
-            plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)}")
+            plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs")
             plt.plot([], [], label=f'No fitting performed') 
         
 
@@ -328,11 +328,11 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     plt.grid(alpha=0.7)
     plt.tight_layout()
     print("\nCFO plots saved!\n")
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200)
+    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f{cfo_mthd}+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200) 
     # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
     # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
-    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
     
 
