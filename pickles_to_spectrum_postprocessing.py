@@ -112,7 +112,7 @@ def plot_spectrum_per_rx_1x3(df, this_exp_mtdata, summary_cfo_dict, PWR_THRESHOL
 
             lat_y, long_x =  df['speed_postuple'].iloc[r][2][0],  df['speed_postuple'].iloc[r][2][1]
             ax[2].scatter( long_x, lat_y, c='k', marker='o', s=10) 
-            ax[2].legend(loc='upper right')
+            ax[2].legend(loc='lower right')
 
             [ea.grid(True) for ea in ax.flatten()]
             plt.suptitle(f'{r}/{df.shape[0]}, Speed = {this_speed} mps, Est CFO: {round(foffset_approximated,2)} Hz')                               

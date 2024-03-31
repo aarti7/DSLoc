@@ -78,6 +78,8 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
     Output:  
     """
 
+    print(" Iterating for CFO removal..")
+
 
     columns_names_array     = df_allrx.columns.values
     n_endpoints_is_subplots = len(columns_names_array)
