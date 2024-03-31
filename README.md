@@ -18,12 +18,46 @@ A mobile node continuously transmits an unmodulated, complex sinusoidal wave at 
 
 
 
-
+<!--
 SHOUT: 
 piping issues: measurements dropped.
 More robust signal reception.
+-->
 
+
+
+### Hdf5 to pandas dataframe conversion
+* How to run the python script: Go to the repository storing the folders <run '' > Each repo must have the files produced by SHOUT!
+
+* List of functions:
+ * Currently used functions:	
+    <!-- 1. `convert_strptime_to_currUTCtsdelta`-->
+     <!--2. `calcDistLatLong`-->
+    <!-- 2. `get_avg_power`-->
+     3. `get_full_DS_spectrum`
+     <!--4. `psdcalc`-->
+    <!-- 5. `match`-->
+     6. `leaves_to_DF`
+     <!--7. `freq_off_averaged_for_full_df`-->
+     8. `do_data_storing`
+     9. `get_dataset_keys`
+     <!--10. `mainn`-->
+     11. `parse_args_def`
+ 
+ 
+<!-- 
+ * Dormant functions
+     1. `meridian_convergence`
+     2. `meridian_convergence2`
+     3. `fancy`
+     4. `getrmsFreq`
+     5. `offset_estimation_souden`
+     6. `freq_off_alternate`
+     7. `fit_freq_on_time`
+     8. `fit_freq_on_time`
+     9. `get_interpolated_foff`
+     10. `plot_all_off_dictionaries`
+
+-->
 
 ### Data analysis
-
-
