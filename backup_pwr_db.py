@@ -377,4 +377,3 @@ def do_cfo_removal(summary_cfo_dict, degreeforfitting, this_measr_timeuptosecond
     return res_cfo_rmvd_signal, foffset_approximated, method
 
 
- 

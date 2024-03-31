@@ -88,6 +88,7 @@ def read_leaves_to_DF(leaves, allsampsandtime):
 
 
 def do_data_storing(ff, attrs, allsampsandtime, leaves):
+    fnm=f"{args.dirdata}".split('meas_')[1]
 
     #### GT reading #############################
     
@@ -103,6 +104,12 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         
         print('\nOverall length of CSV', gt_loc_df.shape, "Max bus speed in this experiment was:", gt_loc_df['Speed (meters/sec)'].max())
     
+    # to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
+    to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
+    get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
+    detour_idxs = gt_loc_df.index.difference(to_filter_df_old_fomrat_3in1list.index)
+    if len(detour_idxs) !=0: gt_loc_df.drop(detour_idxs, inplace=True) # drop all the indexes from the ground truth gps df with inplace =true and only when there were some detours returned!
+
 
     #### ATTRS reading #############################
 
@@ -228,19 +235,13 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         # apply UTM on MT locs
         alllocs_df = gt_loc_df.apply( lambda row: pd.Series(utm.from_latlon( row['Lat'], row['Lon'])[0:2]), axis=1)
         
-        # to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
-        to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
-        get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
-        detour_idxs = gt_loc_df.index.difference(to_filter_df_old_fomrat_3in1list.index)
-        if len(detour_idxs) !=0: gt_loc_df.drop(detour_idxs, inplace=True) # drop all the indexes from the ground truth gps df with inplace =true and only when there were some detours returned!
-
         # apply UTM on BS locs
         all_BS_coords_df = pd.DataFrame(all_BS_coords.values(), columns=['Latitude', 'Longitude'], index=all_BS_coords.keys())
         all_BS_coords_df[['Northing', 'Easting']] = all_BS_coords_df.apply(lambda row: pd.Series(latlon_to_utm(row)), axis=1) 
 
     ######################################################################################################################################
     ######################################################################################################################################
-    # only utsar, high snr ns skipped, and detoure removed, psdvsloc saved, psd dicts
+    # only ustar, high snr ns skipped, and detoure removed, psdvsloc saved, psd dicts
 
     ########### iterating dataframe to make pickles with (spectrum, label) 
     for n in range(0, n_total_measurements ):
@@ -407,7 +408,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ## Store one pickle file for one hdf5 data file in the common directory
         fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+'.pickle'
 
-        # pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
+        pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
         print("\n\nPickled!\n\n\n\n-----------------------------------------------------------\n\n\n\n")
         
         return metadata_dict, cfo_summary_dict, data_and_label_dict, nofrows
@@ -541,9 +542,9 @@ if __name__ == "__main__":
              
             
             
-            if ff<7:
-                print("ff is in the if loop", ff)
-                continue
+            # if ff<8 or ff>=16:
+            #     print("ff is in the if loop", ff)
+            #     continue
 
             dsfile = h5py.File("%s/%s" % (args.dirdata, args.hdf5name), "r")
             dsfile_with_meas_root = dsfile[MEAS_ROOT]
