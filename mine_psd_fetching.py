@@ -239,7 +239,7 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
     plt.ylabel('RMS Doppler Spread (Hz)')
     plt.tight_layout()
     print("RMS plots saved!")
-    plt.figure("rmsall").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rmsall.pdf",format='pdf')
+    plt.figure("rmsall").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rmsall.svg",format='svg', dpi=1200) #.pdf",format='pdf')
     plt.close("rmsall")    
 
 
@@ -276,7 +276,7 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
 
 
 
-def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runtime, degreeforfitting, cfo_mthd):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
+def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, runtime, degreeforfitting, cfo_mthd, overall_plots_dir):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
     marker_list=["o","s","P","^","*","x"]
 
     mean_frqoff_perrx_dict      = summary_cfo_dict['meanmethod']
@@ -285,8 +285,7 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
 
 
     #### ALL BS in one offset vs time 
-    # print("fn is ====", fn)
-    ds_numbr_is = names_to_ds_dict[fn]
+    ds_numbr_is = names_to_ds_dict[fn] ## print("fn is ====", fn)
 
     fig, ax = plt.subplots(figsize=(10,5), num = "ZeroSpeedOffset_overtime_allBSin1")   
     ax.set_rasterized(True)
@@ -298,25 +297,54 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
         vv=[]
         tt=[]
         tt_unaltered=[]
+        
         vals = kvp[1]
-        if len(vals) >= degreeforfitting+1: # len(vals) != 0:
+        if len(vals) >= degreeforfitting-1: # len(vals) != 0:
             for j in range(len(vals)):
                 vv.append(vals[j][0])
                 
                 delta_t_since_start = convert_strptime_to_currUTCtsdelta(vals[j][1], exp_start_timestampUTC)
                 tt.append(   round(delta_t_since_start/3600 , 2) ) 
                 tt_unaltered.append(   delta_t_since_start  )
-
+            
             xfit = np.linspace(min(tt_unaltered), max(tt_unaltered), 100)
-            polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting)) 
-            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.9-(.1*i), marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs")            
-            plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting}rd deg. polynomial fit') 
             times.append(np.array(tt).max())
-            # lenn.append(len(vals))
-        
-        else:
-            plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs")
-            plt.plot([], [], label=f'No fitting performed') 
+            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.9-(.1*i), marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs")            
+            
+            # polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting))
+            # plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting}rd deg. polynomial') 
+
+            # Instead, get varying degreeforfitting as a new, degreeforfitting_n!!
+            if len(vals) > degreeforfitting: #4>3 # !=0:  
+                degreeforfitting_n = degreeforfitting #3  # a cubic line for us 
+                # polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting)) 
+                # plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting}rd deg. polynomial') 
+            
+            elif len(vals) == degreeforfitting: #3=3 # !=0: 
+                degreeforfitting_n = degreeforfitting-1 #2 is same as len(vals)-1 !!a quad line for us
+                # polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting_n)) 
+                # plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting_n}nd deg. polynomial') 
+
+            elif len(vals) == degreeforfitting-1: #2=3-1 # !=0: 
+                degreeforfitting_n = degreeforfitting-2 #1 is same as len(vals)-1 !!a stright line for us
+                # polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting_n)) 
+                # plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'{degreeforfitting_n}st deg. polynomial') 
+
+            else: #len(value_all_tuples) ==1
+                    degreeforfitting_n = degreeforfitting-3
+
+            polynomia = np.poly1d(fit_freq_on_time(tt_unaltered, vv, degreeforfitting_n))
+            plt.plot( np.round(xfit/3600 , 2), polynomia(xfit), ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'Polynomial deg:{degreeforfitting}' if degreeforfitting_n>0 else 'Single CFO') 
+
+
+        else: # To also plot the solo or the NONE case!
+            for j in range(len(vals)):
+                vv.append(vals[j][0])
+                delta_t_since_start = convert_strptime_to_currUTCtsdelta(vals[j][1], exp_start_timestampUTC)
+                tt.append(   round(delta_t_since_start/3600 , 2) )
+
+            plt.plot(tt, vv, ls=':', c='C{}'.format(i), alpha=0.9-(.1*i), marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs") # plt.plot([], [], ls=':', c='C{}'.format(i), alpha=0.7, marker=marker_list[i], markersize=5+(3*i), markeredgecolor='k', label=f"{kvp[0].split('-')[1]}: {len(vals)} CFOs")
+            plt.plot([], [], ls='-', c='C{}'.format(i), alpha=0.9-(.1*i), label=f'No fitting performed') 
         
 
 
@@ -328,11 +356,12 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, overall_plots_dir, runti
     plt.grid(alpha=0.7)
     plt.tight_layout()
     print("\nCFO plots saved!\n")
-    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f{cfo_mthd}+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200) 
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
+    # plt.show()
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
+    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200) 
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
+    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
     
 
@@ -533,7 +562,7 @@ def plot_spectrum_per_rx_1x1(fn, df, this_exp_mtdata, summary_cfo_dict, PWR_THRE
     this_exp_start_timestampUTC = summary_cfo_dict['exp_start_timestampUTC']
     
     # print("fnm is", fnm, this_exp_start_timestampUTC)
-    plot_all_off_dictionaries(fnm, summary_cfo_dict)
+    # plot_all_off_dictionaries() 
 
 
 
@@ -601,7 +630,7 @@ def plot_spectrum_per_rx_1x1(fn, df, this_exp_mtdata, summary_cfo_dict, PWR_THRE
     # plt.ioff()
     # plt.close()
     # my_plot_rms_dicts(rmsdict)
-    # plot_all_off_dictionaries(summary_cfo_dict)
+    # plot_all_off_dictionaries()
 
 
 
@@ -648,7 +677,11 @@ if __name__ == "__main__":
 
         ## detour temp fix
         indexofdetour = this_exp_df.shape[0] #if fn != 'meas_02-14-2023_18-53-20' else 50
+        
+
         print("length of this experiment data:", this_exp_df.iloc[:indexofdetour,:].shape[0])
+        
+
         this_exp_cfos = loaded_data[2] 
         plot_spectrum_per_rx_1x1 (fn, this_exp_df.iloc[:indexofdetour,:], this_exp_metadata, this_exp_cfos, PWR_THRESHOLD, DEGREE_OF_POLYFIT)#, FD_MAXPOSSIBLE)  # quickplot_labels_non_utmed_per_df(i, fn, this_exp_df.iloc[:indexofdetour]) 
         

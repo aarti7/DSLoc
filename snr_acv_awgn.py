@@ -442,7 +442,7 @@ def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, 
                 # idx_psd_max = idx_psd_max_in_all_peaks_idxs_not_in_results
                  
 
-                #For experiemtn 2023-02-14 14:49:39
+                #For experiemtn 2023-02-14 1:49:39
                 # to_test = [139, 143, 144, 188, 189, 192, 254, 276, 289, 290, 291, 299, 365, 366, 414, 421, 426, 498, 499]
                 
 
