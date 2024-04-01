@@ -28,7 +28,7 @@ plt.rc('ytick', labelsize=8)
 
 
 
-
+ 
 names_to_ds_dict = {
 "01-30-2023_15-40-55":"D1",
 "01-30-2023_17-47-39":"D2",
@@ -161,13 +161,15 @@ def get_filtered_df_and_plot(name, df, plotflag =False):
     
     if condition: 
         print(". Bus route was green.", end="")
+        routewas = 'green'
         filtered_df = green_detour(name, df, plotflag)  
     else: 
         print(". Bus route was orange.", end="")
+        routewas = 'orange'
         filtered_df = orange_detour(name, df, plotflag)
     
     print(" The filtered df's shape:", filtered_df.shape)
-    return filtered_df        
+    return routewas # filtered_df        
 
 
 

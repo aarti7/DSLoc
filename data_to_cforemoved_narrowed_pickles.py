@@ -104,11 +104,16 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         
         print('\nOverall length of CSV', gt_loc_df.shape, "Max bus speed in this experiment was:", gt_loc_df['Speed (meters/sec)'].max())
     
-    # to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
-    to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
-    get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
-    detour_idxs = gt_loc_df.index.difference(to_filter_df_old_fomrat_3in1list.index)
-    if len(detour_idxs) !=0: gt_loc_df.drop(detour_idxs, inplace=True) # drop all the indexes from the ground truth gps df with inplace =true and only when there were some detours returned!
+
+    to_filter_tothemax_or_not = 1
+    to_plott = 0
+
+    if to_filter_tothemax_or_not:
+        ##### to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
+        to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
+        get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
+        detour_idxs = gt_loc_df.index.difference(to_filter_df_old_fomrat_3in1list.index)
+        if len(detour_idxs) !=0: gt_loc_df.drop(detour_idxs, inplace=True) # drop all the indexes from the ground truth gps df with inplace =true and only when there were some detours returned!
 
 
     #### ATTRS reading #############################
@@ -182,16 +187,17 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         
         ### calling the function for cfo calculation #############################
         
-        # NEW! keeping! using db option! but geeting the high_SNR_n_list so keeping this one! 
-        cfo_mthd = 'db'
-        cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
-        plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+        ### NEW! keeping! using db option, almost same number of rows as old! but getting the high_SNR_n_list so keeping this one! 
+        if to_filter_tothemax_or_not: 
+            cfo_mthd = 'db'
+            cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
+            #  plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
 
-
-        # OLD!
-        # cfo_mthd = 'db'
-        # cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting)
-        # plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+        else:
+            ### OLD!
+            cfo_mthd = 'db'
+            cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting)
+            ## plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -218,9 +224,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
     ######################################################################################################################################
     ######################################################################################################################################
-    plott = 1
 
-    if plott:
+    if to_plott:
         runtime = f'{int(time.time())}'
         print("runtime is:", runtime)
 
@@ -241,12 +246,11 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
     ######################################################################################################################################
     ######################################################################################################################################
-    # only ustar, high snr ns skipped, and detoure removed, psdvsloc saved, psd dicts
 
     ########### iterating dataframe to make pickles with (spectrum, label) 
     for n in range(0, n_total_measurements ):
 
-        if n in no_measr_time_idx_n or n in high_SNR_n_list:
+        if n in no_measr_time_idx_n:
             print(f"{n}th measurment skipped cause its empty\n") # as this pth /all p msrmnts is missing! Neither should store or do labelling for those who are present")
             continue # but not exiting(breaking) the loop. Such that, will go to the next n
         
@@ -289,14 +293,33 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 this_measurement, cfo_approx, cfomthd_forthismsrmnt = do_cfo_removal(cfo_summary_dict, degreeforfitting, this_measr_timeuptoseconds, df_allrx.columns[p], this_measurement, rate)
 
             ####################################
-            # full spectrum 
-            [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
             
-            # narrowed spectrum indexes 
-            fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
+            if to_filter_tothemax_or_not:
+                # get psd, not spectrum, only for my ML
 
-            # narrowed spectrum - will be pickling!
-            data_and_label_dict[df_allrx.columns[p]].append(full_spectrum[fdidx])
+                if n in high_SNR_n_list:
+                    # taking advantage of new getcfo function to filter out high SNR altogether
+                    break
+                
+                # full psd
+                fig_plt = plt.figure("fig_pltfunction")
+                [pxxc_linear,   freq_full]   = plt.psd(this_measurement, NFFT= nsamps, Fs = rate)          ## pxxc_DB, pxxc_linear, fxxc = psdcalc(corrected_signal, rate)
+                plt.close("fig_pltfunction")
+                
+                # narrowed frequency indexes 
+                fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
+                # narrowed psd
+                data_and_label_dict[df_allrx.columns[p]].append(pxxc_linear[fdidx])  # pickling!
+
+
+            else:
+                # full spectrum 
+                [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
+                
+                # narrowed frequency indexes 
+                fdidx  = (freq_full >= -ns) & ( freq_full <= ns)             
+                # narrowed spectrum
+                data_and_label_dict[df_allrx.columns[p]].append(full_spectrum[fdidx]) # pickling!
 
             ####################################
 
@@ -306,7 +329,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                         
             #####################################
             
-            if plott and p==4:# plotting,saving only for utsar
+            if to_plott and p==4:# plotting, saving only for ustar
 
                 f_ns              = freq_full[fdidx]      
                 psdln_ns          = np.nan_to_num(np.square(np.abs(full_spectrum[fdidx])))
@@ -388,7 +411,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
 
 
-    if plott:
+    if to_plott:
         plt.ioff()
         plt.close("psdVsloc")
         my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
@@ -538,13 +561,11 @@ if __name__ == "__main__":
             
             print("uu is", uu, "\nff is", ff)
 
-            print(f"\n\nProcessing the data in {ff}th {args.dirdata} directory\n")
-             
-            
-            
-            # if ff<8 or ff>=16:
-            #     print("ff is in the if loop", ff)
-            #     continue
+            if ff<8:
+                continue 
+
+
+            print(f"\n\nProcessing the data in {ff}th {args.dirdata} directory\n")           
 
             dsfile = h5py.File("%s/%s" % (args.dirdata, args.hdf5name), "r")
             dsfile_with_meas_root = dsfile[MEAS_ROOT]

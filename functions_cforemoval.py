@@ -364,8 +364,8 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
                         # fig,ax=plt.subplots(num="db20"); plt.plot(freqs, result_fft_db, 'r-', label=f'{n}{df_allrx.columns[p][9:12]}'); plt.axhline(y = np.mean(result_fft_db[(freqs >= -lpf_fc) & ( freqs <= lpf_fc)]), color = 'g', linestyle = '--', label='narw mean' ); plt.axhline(y = pwr_threshold, color = 'b', linestyle = '--', label='fpk pwr thrs'); plt.plot( freqs[listofidxsofresult_db], 10*np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_db], 'k>', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_db)}'); plt.grid(True); plt.legend(loc='upper left');  plt.show(); plt.xlim(-lpf_fc, lpf_fc); plt.draw(); plt.pause(1); 
                         # fig,ax=plt.subplots(num="db2"); plt.axhline(y = np.mean(result_fft_db), label='full mean', color = 'm', linestyle = '--');
 
-                        fig,ax=plt.subplots(num="high_SNR"); plt.plot(freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_db], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_db], 'go', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_db)}'); plt.axhline(y = np.mean(result_fft_db[(freqs >= -lpf_fc) & ( freqs <= lpf_fc)]), color = 'g', linestyle = '--', label='narw mean' ); plt.axhline(y = pwr_threshold, color = 'b', linestyle = '--', label='fpk pwr thrs');  plt.legend(loc='upper left'); plt.grid(True); plt.xlim(-lpf_fc, lpf_fc); plt.ylim(-60, 10);  plt.draw();# pdb.set_trace()
-                        plt.figure("high_SNR").savefig(f"{overall_plots_dir}" +"/"+f"{fn}"+f'_{n}_broke_out_for_{p}_{cfo_mthd}'+"_highsnr.pdf",format='pdf')
+                        # fig,ax=plt.subplots(num="high_SNR"); plt.plot(freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_db], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_db], 'go', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_db)}'); plt.axhline(y = np.mean(result_fft_db[(freqs >= -lpf_fc) & ( freqs <= lpf_fc)]), color = 'g', linestyle = '--', label='narw mean' ); plt.axhline(y = pwr_threshold, color = 'b', linestyle = '--', label='fpk pwr thrs');  plt.legend(loc='upper left'); plt.grid(True); plt.xlim(-lpf_fc, lpf_fc); plt.ylim(-60, 10);  plt.draw();# pdb.set_trace()
+                        # plt.figure("high_SNR").savefig(f"{overall_plots_dir}" +"/"+f"{fn}"+f'_{n}_broke_out_for_{p}_{cfo_mthd}'+"_highsnr.pdf",format='pdf')
                         
                         break
                     
@@ -526,12 +526,14 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
 
 
     summary_cfo_dict = {
+    'pwr_threshold': pwr_threshold ,
+    'degreeforfitting': degreeforfitting,
     'exp_start_timestampUTC': exp_start_timestampUTC,
     'meanmethod': mean_frqoff_perrx_dict, 
     'fitdmethod': fitd_frqoff_perrx_dict, 
     'allcfotime': freqoff_time_dict
     }
-
+ 
     print("......done getting the CFO\n\n")
     
 
@@ -544,7 +546,7 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
 
 ##########################
 
-def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold):
+def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting):
     '''
     '''
     print("\n\nCalculating the cfo.... ")
@@ -774,8 +776,10 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
     print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
     
 
-
+ 
     summary_cfo_dict = {
+    'pwr_threshold': pwr_threshold ,
+    'degreeforfitting': degreeforfitting,
     'exp_start_timestampUTC': exp_start_timestampUTC,
     'meanmethod': mean_frqoff_perrx_dict, 
     'fitdmethod': fitd_frqoff_perrx_dict, 
