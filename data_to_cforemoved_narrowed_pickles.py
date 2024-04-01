@@ -2,7 +2,7 @@ from libs import *
 from functions_cforemoval import *
 
 from mine_psd_fetching import *
-
+from matplotlib.mlab import psd
 
 ###############################################################
 ###############################################################    
@@ -33,8 +33,6 @@ MAXIMUM_BUS_SPEED = 21  #in mps
 ######################################## Read hdf5 tree ########
 ################################################################
 def read_leaves_to_DF(leaves, allsampsandtime):
-    '''
-    '''
     print('Reading hdf5 tree......',end='')
 
     endpoints=[]
@@ -105,15 +103,17 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         print('\nOverall length of CSV', gt_loc_df.shape, "Max bus speed in this experiment was:", gt_loc_df['Speed (meters/sec)'].max())
     
 
-    to_filter_tothemax_or_not = 1
+    to_filter_tothemax_or_not = 0
     to_plott = 0
 
     if to_filter_tothemax_or_not:
         ##### to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
         to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
-        get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
+        routewas = get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
         detour_idxs = gt_loc_df.index.difference(to_filter_df_old_fomrat_3in1list.index)
+        print("detour indexes found")
         if len(detour_idxs) !=0: gt_loc_df.drop(detour_idxs, inplace=True) # drop all the indexes from the ground truth gps df with inplace =true and only when there were some detours returned!
+        print("detour indexes removed")
 
 
     #### ATTRS reading #############################
@@ -145,14 +145,20 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
 
     ## 2 power threshold value
-    pwr_threshold = args.pwrthrshld # -19# in dB
+    pwr_threshold = args.pwrthrshld # in dB
     print("Hardcoded value:","threshold ==", pwr_threshold, "\n")
     
     CFO_REMOVE_FLAG=args.ofstremove
 
     fnm=f"{args.dirdata}".split('meas_')[1]
-    overall_plots_dir = Path(args.dirdata+'/overall_plots')
-    overall_plots_dir.mkdir(parents=True, exist_ok=True)
+
+    nametothefolder = "finalplots"  #"overall_plots"
+    overall_plots_dir = Path(args.dirdata+'/'+f'{nametothefolder}')
+
+    if overall_plots_dir.exists():
+        shutil.rmtree(overall_plots_dir) # to remove non-empty directories
+
+    overall_plots_dir.mkdir(parents=True, exist_ok=False)
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -191,7 +197,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         if to_filter_tothemax_or_not: 
             cfo_mthd = 'db'
             cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
-            #  plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
 
         else:
             ### OLD!
@@ -236,11 +242,12 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         frst, last = 1, 2
         fig, ax = plt.subplots(frst, last, figsize=(8, 3), num = "psdVsloc", sharey = False, sharex = False) #sharey = True, sharex = True)
         l=last-1  
+        plt.ion()
 
-        # apply UTM on MT locs
+        #### apply UTM on MT locs
         alllocs_df = gt_loc_df.apply( lambda row: pd.Series(utm.from_latlon( row['Lat'], row['Lon'])[0:2]), axis=1)
         
-        # apply UTM on BS locs
+        #### apply UTM on BS locs
         all_BS_coords_df = pd.DataFrame(all_BS_coords.values(), columns=['Latitude', 'Longitude'], index=all_BS_coords.keys())
         all_BS_coords_df[['Northing', 'Easting']] = all_BS_coords_df.apply(lambda row: pd.Series(latlon_to_utm(row)), axis=1) 
 
@@ -301,11 +308,24 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                     # taking advantage of new getcfo function to filter out high SNR altogether
                     break
                 
-                # full psd
-                fig_plt = plt.figure("fig_pltfunction")
-                [pxxc_linear,   freq_full]   = plt.psd(this_measurement, NFFT= nsamps, Fs = rate)          ## pxxc_DB, pxxc_linear, fxxc = psdcalc(corrected_signal, rate)
-                plt.close("fig_pltfunction")
+                #####full psd
+                # fig_plt = plt.figure("fig_pltfunction")
+                # [pxxc_linear,   freq_full]   = plt.psd(this_measurement, NFFT= nsamps, Fs=rate)          ## pxxc_DB, pxxc_linear, fxxc = psdcalc(corrected_signal, rate)
+                # plt.close("fig_pltfunction")
+                # print(pxxc_linear[0], pxxc_linear[-1], freq_full[0], freq_full[-1])
+
                 
+                pxxc_linear, freq_full = psd(this_measurement, NFFT=nsamps, Fs=rate)
+                # print(10.0 *np.log10(np.nan_to_num(np.square(np.abs(pxxc_linear))))[[0,-1]]) 
+
+
+                full_spectrum, freq_full  = get_full_DS_spectrum(this_measurement, rate)
+
+                # print(10.0 *np.log10(np.nan_to_num(np.square(np.abs(full_spectrum))))[[0,-1]])                
+                # psdln          = np.nan_to_num(np.square(np.abs(full_spectrum)))
+                # psdDB          = 10.0 *np.log10(psdln)                
+
+
                 # narrowed frequency indexes 
                 fdidx  = (freq_full >= -ns) & ( freq_full <= ns) 
                 # narrowed psd
@@ -315,6 +335,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
             else:
                 # full spectrum 
                 [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
+                print(full_spectrum[0], full_spectrum[-1])
                 
                 # narrowed frequency indexes 
                 fdidx  = (freq_full >= -ns) & ( freq_full <= ns)             
@@ -333,7 +354,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
                 f_ns              = freq_full[fdidx]      
                 psdln_ns          = np.nan_to_num(np.square(np.abs(full_spectrum[fdidx])))
-                psdDB_ns          = np.nan_to_num(10.0 *np.log10(psdln_ns))  
+                psdDB_ns          = np.nan_to_num(10.0 *np.log10(np.nan_to_num(np.square(np.abs(full_spectrum[fdidx])))))  
                 aa_psd_max        = psdDB_ns[np.argmax(psdDB_ns)]
 
                 ax[0].clear()
@@ -362,7 +383,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
                 ax[l].clear()
                 
-                if ff in [6,7,18,19,20]:
+                if routewas == 'orange': #ff in #[6,7,18,19,20]:
                     routeclr = '#ffb16d'
                     routename = 'O' #B
                 else:
@@ -404,6 +425,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 
                 # plt.draw()
                 # plt.pause(0.01) 
+                
                 plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
                          
 
@@ -428,12 +450,12 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         print("Storing only iff each BS/columns got same number of rows.")
         nofrows = np.unique(final_totallength)
         
-        ## Store one pickle file for one hdf5 data file in the common directory
+        #### Store one pickle file for one hdf5 data file in the common directory
         fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+'.pickle'
-
         pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
-        print("\n\nPickled!\n\n\n\n-----------------------------------------------------------\n\n\n\n")
+        print("\n\nPickled!", end="")
         
+        print("\n\n\n\n-----------------------------------------------------------\n\n\n\n")
         return metadata_dict, cfo_summary_dict, data_and_label_dict, nofrows
 
     else:
@@ -559,11 +581,10 @@ if __name__ == "__main__":
             args.degoffit   = args_old.degoffit
             args.window     = args_old.window # print(args)
             
-            print("uu is", uu, "\nff is", ff)
-
-            if ff<8:
-                continue 
-
+            # print("uu is", uu, "\nff is", ff)
+            # print("ff is", ff)
+            # if ff<21:
+            #     continue 
 
             print(f"\n\nProcessing the data in {ff}th {args.dirdata} directory\n")           
 
@@ -592,6 +613,7 @@ if __name__ == "__main__":
     
     print("Time now  = ", datetime.now().strftime("%H:%M:%S"))
 
-    # exec(open("/Users/aartisingh/Documents/DopplerSpreadLocalization/mine_psd_fetching.py").read()) 
+    # exec(open("/Users/aartisingh/Documents/DopplerSpreadLocalization/pickes_to_psdplots.py").read()) 
+    # exec(open("/Users/aartisingh/Documents/DopplerSpreadLocalization/pickes_to_IQ_plots.py").read()) 
 
 
