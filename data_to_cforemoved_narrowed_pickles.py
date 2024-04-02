@@ -87,7 +87,8 @@ def read_leaves_to_DF(leaves, allsampsandtime):
 
 def do_data_storing(ff, attrs, allsampsandtime, leaves):
     fnm=f"{args.dirdata}".split('meas_')[1]
-
+    ############################################
+    
     #### GT reading #############################
     
     loc_files = list(Path(args.dirdata).rglob('*.csv') ) # pick the csv outta cwd
@@ -103,11 +104,11 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         print('\nOverall length of CSV', gt_loc_df.shape, "Max bus speed in this experiment was:", gt_loc_df['Speed (meters/sec)'].max())
     
 
-    to_filter_tothemax_or_not = 1
-    to_plott = 0
+    to_filter_tothemax_or_not = 1 # For filtering the GPS CSV gt_loc_df, doing modified cfo, and get snr indexes!
+    to_plott = 1
 
-
-    # if to_filter_tothemax_or_not:
+    # Not filtering the GPS CSV gt_loc_df anymore, but still doing modified cfo with snr indexes as to_filter_tothemax_or_not is set to 1 above
+    # if to_filter_tothemax_or_not: 
     #     ##### to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
     #     to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
     #     routewas = get_filtered_df_and_plot(fnm, to_filter_df_old_fomrat_3in1list) # inplace is set to true! so old df to_filter_df_old_fomrat_3in1list is lost, not gt_loc_df!
@@ -125,7 +126,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
       
     rate = attrs['rxrate']
     nsamps = attrs['nsamps']
-
+    
+    ############################################
     #### calling the function for reading hdf5 into df #############################
     txis, no_measr_time_idx_n_from_hdf5, df_allrx, df_allti, exp_start_timestampUTC = read_leaves_to_DF(leaves, allsampsandtime)
     
@@ -137,30 +139,30 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
     print('Number of RX Base Stations are   ==', n_endpoints_is_subplots)
     print('Number of total measurements     ==', n_total_measurements, "\n\n") 
-    
-
-    ## Hardcoded narrowed spectrum 
+        
+    ############################################
+    ## 1 Hardcoded narrowed spectrum 
     ns = args.frqcutoff # in hz
     print("Hardcoded value:","Narrowed Spectrum freq_span ==", ns)
     
-    cfo_summary_dict = {}
 
     ## 2 power threshold value
     pwr_threshold = args.pwrthrshld # in dB
     print("Hardcoded value:","threshold ==", pwr_threshold, "\n")
     
+
+    ############################################
+
+    nametothefolder = "formyML_psdplots"#"finalplots"  #"overall_plots"
+    overall_plots_dir = Path(args.dirdata+'/'+f'{nametothefolder}')
+    if overall_plots_dir.exists():
+        shutil.rmtree(overall_plots_dir)
+    overall_plots_dir.mkdir(parents=True, exist_ok=False)
+
+    ############################################
+    cfo_summary_dict = {}
     CFO_REMOVE_FLAG=args.ofstremove
 
-    fnm=f"{args.dirdata}".split('meas_')[1]
-
-    nametothefolder = "finalplots"  #"overall_plots"
-    overall_plots_dir = Path(args.dirdata+'/'+f'{nametothefolder}')
-
-    if overall_plots_dir.exists():
-        shutil.rmtree(overall_plots_dir) # to remove non-empty directories
-
-    overall_plots_dir.mkdir(parents=True, exist_ok=False)
-    
     ######################################################################################################################################
     ######################################################################################################################################
     if CFO_REMOVE_FLAG:
@@ -196,14 +198,14 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         
         ### NEW! keeping! using db option, almost same number of rows as old! but getting the high_SNR_n_list so keeping this one! 
         if to_filter_tothemax_or_not: 
-            cfo_mthd = 'db'
-            cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n2, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
-            # plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+            cfo_mthd = 'new_db' # new_lin
+            cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
+            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
 
         else:
             ### OLD!
-            cfo_mthd = 'db'
-            cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n2 = get_cfo(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting)
+            cfo_mthd = 'old_db'
+            cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo = get_cfo(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting)
             ## plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
     
     ######################################################################################################################################
@@ -302,7 +304,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
             ####################################
             
-            if to_filter_tothemax_or_not:
+            if to_filter_tothemax_or_not: # with new cfo method 
                 # get psd, not spectrum, only for my ML
 
                 if n in high_SNR_n_list:
@@ -333,7 +335,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 data_and_label_dict[df_allrx.columns[p]].append(pxxc_linear[fdidx])  # pickling!
 
 
-            else:
+            else: # old cfo method for uploading on git
                 # full spectrum 
                 [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
                 # print(full_spectrum[0], full_spectrum[-1])
@@ -385,7 +387,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 ax[l].clear()
                 
                 # if routewas == 'orange': #ff in #[6,7,18,19,20]:
-                if ff in [6,7,18,19,20]:
+                if ff in [6,7,18,19]:
                     routeclr = '#ffb16d'
                     routename = 'O' #B
                 else:
@@ -425,8 +427,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 ax[l].legend(loc='lower right')
                 plt.tight_layout()
                 
-                plt.draw()
-                plt.pause(0.01) 
+                # plt.draw()
+                # plt.pause(0.01) 
                 
                 plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
                          
@@ -455,7 +457,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         
         #### Store one pickle file for one hdf5 data file in the common directory
         fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+'.pickle'
-        # pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
+        pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
         print("\n\nPickled!", end="")
         
         print("\n\n\n\n-----------------------------------------------------------\n\n\n\n")
@@ -607,8 +609,8 @@ if __name__ == "__main__":
             ### print("uu is", uu, "\nff is", ff)
             print("ff is", ff)
             
-            if ff!=16:
-                continue 
+            # if ff!=16:
+            #     continue
 
             print(f"\n\nProcessing the data in {ff}th {args.dirdata} directory\n")           
 
