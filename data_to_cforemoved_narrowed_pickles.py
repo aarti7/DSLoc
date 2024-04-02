@@ -115,7 +115,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     ### For doing modified cfo, and get snr indexes, and/or filtering the GPS CSV gt_loc_df
     ############################################
     
-    to_filter_tothemax_or_not = 0 # Flag to select what to store: PSD or IQ 
+    to_filter_tothemax_or_not = 1 # Flag to select what to store: PSD or IQ 
     
     ############################################
     
@@ -649,7 +649,7 @@ if __name__ == "__main__":
             metadata_dict, cfo_summary_dict, datalabel_dict, nofrws = do_data_storing(ff, needed_attrs_obj, commonANDdeepest_root_foralltxrx, leaves_withTX if args.treebranch =='wtx' else leaves_withoutTX) #all_leaves_2) # leaves_withTX)
             
             totalrows += nofrws 
-            break   
+            # break   
 
     print(f"\n\nAll {NumberofDatafolders} data folders in the common data directory {args.dircommon} done! Total valid rows collected = {totalrows}\n\n")
     
