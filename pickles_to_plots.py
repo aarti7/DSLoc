@@ -17,6 +17,52 @@ from libs import *
 from GPSlocs_plotting_functions import *
 
 
+def getrmsFreq(dspd,frqs):
+    total_power = np.sum(dspd)
+    fractional_power = dspd/total_power
+    bar_frqs = np.sum(fractional_power*frqs) #== mean of Dshift
+    var_frqs = np.sum(fractional_power*(frqs-bar_frqs)**2) 
+    rmsFreqval = np.sqrt(var_frqs) #== std=sqrt(variance) of Dshift 
+    return round(rmsFreqval, 2)
+
+def rmsfunction(psd_db_ns, psd_linear_ns, freqs_ns, PWR_THRESHOLD):  
+    max_noise_power_db = PWR_THRESHOLD # np.max([np.max(psd_db_ns[noise_window_left]), np.max(psd_db_ns[ noise_window_rght ])])    
+    max_noise_power_linear = 10**(max_noise_power_db/10)
+
+    rmsis_entire = getrmsFreq(psd_linear_ns, freqs_ns)
+    rmsis_thrsld = getrmsFreq(psd_linear_ns[psd_linear_ns > max_noise_power_linear], freqs_ns[psd_linear_ns > max_noise_power_linear])
+    return rmsis_thrsld  
+
+def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime, saveplots_flag):
+    
+    fig_rmsall, axs_rmsall = plt.subplots(figsize=(6,4), num = "rmsall")
+    for uu, kvp in enumerate(rmsdict.items()):
+        if len(kvp[1]) !=0 and kvp[0].split('-')[1] =='ustar':
+            rms_df_d = pd.DataFrame()
+            rms_df_d = pd.DataFrame(kvp[1]).apply(lambda x: pd.Series(x) )  
+    
+            # plt.scatter(rms_df_d.iloc[:,1], rms_df_d.iloc[:,0], label = f'{kvp[0]}'.split('-')[1] )
+            
+            # zero speed mask!!
+            df_onlynonzero = rms_df_d[rms_df_d[0] != 0] 
+            maxx = min(df_onlynonzero.iloc[:,0].nlargest(2))
+            df_onlynonzero = df_onlynonzero[df_onlynonzero[0] < maxx] # zero speed mask!!
+            axs_rmsall.scatter(df_onlynonzero.iloc[:,1], df_onlynonzero.iloc[:,0], c='C{}'.format(uu), label = f'{kvp[0]}'.split('-')[1] )
+    
+    plt.xlabel('Speed(mps)')
+    plt.grid(True)
+    plt.legend(loc="upper left")
+    plt.ylabel('RMS Doppler Spread (Hz)')
+    plt.tight_layout()
+    if not saveplots_flag:
+        plt.show()
+    else:
+        plt.figure("rmsall").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rmsall.svg",format='svg', dpi=1200) #.pdf",format='pdf')
+        print(f"\n\nRMS plots saved at loc: {overall_plots_dir}!")
+        plt.close("rmsall")    
+
+
+
 ######################################## Plot per RX spectrum and MT location   #######################
 #########################################################################################################
 def plot_everyRXspectrum_VS_MTloc_1x2(fnm, df, routewas, this_exp_mtdata, summary_cfo_dict , overall_plots_dir='./', runtim=0, saveplots_flag=0):
@@ -27,12 +73,14 @@ def plot_everyRXspectrum_VS_MTloc_1x2(fnm, df, routewas, this_exp_mtdata, summar
     if saveplots_flag:
         print("Storing in these subdirectories")
         overall_plots_dir.mkdir(parents=True, exist_ok=True)
-        runtime_plots_dir = Path(str(overall_plots_dir)+"/"+f'{runtime}')
+
+        runtime_plots_dir = Path(str(overall_plots_dir)+"/"+f'plots_at_runtime_{runtime}')
         runtime_plots_dir.mkdir(parents=True, exist_ok=True)
+        
         print(f"\nStoring in these subdirectories{runtime_plots_dir}")
 
     pwr_threshold               = summary_cfo_dict['pwr_threshold']
-    degreeforfitting            = summary_cfo_dict['degreeforfitting']
+    # degreeforfitting            = summary_cfo_dict['degreeforfitting'] # no need to extract for now
     fitd_feqoff_perrx_dict      = summary_cfo_dict['fitdmethod']
     mean_frqoff_perrx_dict      = summary_cfo_dict['meanmethod']
     frqoff_time_perrx_dict      = summary_cfo_dict['allcfotime']
@@ -74,7 +122,7 @@ def plot_everyRXspectrum_VS_MTloc_1x2(fnm, df, routewas, this_exp_mtdata, summar
     for r in range(0, len(df)):
         this_speed = df['speed_postuple'].iloc[r][0]         # fig, axx = plt.subplots(1, 5, figsize=(15, 3), num="narrowspectrum", sharey= True)            
         
-        for p in range(0, len(colnames_list)-1):
+        for p in range(0, len(colnames_list)):#-1): this is annoying!
 
             ############################# x,y axis!  ########################################
 
@@ -85,15 +133,15 @@ def plot_everyRXspectrum_VS_MTloc_1x2(fnm, df, routewas, this_exp_mtdata, summar
             ax[0].clear()
             ax[0].plot(f_ns, psdDB_ns, '-o',color = 'r' if this_speed==0 else 'g', label = f"{r}/{df.shape[0]}: Narrow Spec at {colnames_list[p].split('-')[1]}")
             
-            # if aa_psd_max > pwr_threshold:
-                # rmsis = rmsfunction(psdDB_ns, psdln_ns, f_ns, pwr_threshold)
+            if aa_psd_max > pwr_threshold:
+                rmsis = rmsfunction(psdDB_ns, psdln_ns, f_ns, pwr_threshold)
                 
-                # rmsdict[df.columns[p]].append([rmsis, this_speed.values[0], this_measr_timeuptoseconds, matched_row_ingt.iloc[0][3:5][0], matched_row_ingt.iloc[0][3:5][1] , calcDistLatLong( all_BS_coords[df.columns[p].split('-')[1]], matched_row_ingt.iloc[0][3:5] )])
+                rmsdict[df.columns[p]].append([rmsis, this_speed, None, None, None])
                 
-                # rms_at = AnchoredText(f"RMS:{round(rmsis,2)} Hz\nSpeed:{round(this_speed.values[0],1)} mps", prop=dict(size=8), frameon=True,pad=0.1, loc='upper left')  #\nMax. noise:{round(pwr_threshold,2)}
-                # rms_at.patch.set_boxstyle("round, pad=0.,rounding_size=0.2")
+                rms_at = AnchoredText(f"RMS:{round(rmsis,2)} Hz\nSpeed:{round(this_speed,1)} mps", prop=dict(size=8), frameon=True,pad=0.1, loc='upper left') 
+                rms_at.patch.set_boxstyle("round, pad=0.,rounding_size=0.2")
                
-                # ax[0].add_artist(rms_at)
+                ax[0].add_artist(rms_at)
 
             ax[0].axhline(y = pwr_threshold, lw=1, ls='--', c='k', label= f"Noise Threshold: {pwr_threshold}") #\nEst. CFO: {round(cfo_approx,2)} Hz
             ax[0].legend(loc="lower left")
@@ -140,8 +188,7 @@ def plot_everyRXspectrum_VS_MTloc_1x2(fnm, df, routewas, this_exp_mtdata, summar
             ax[l].legend(loc='lower right')
             plt.tight_layout()
             
-            plt.draw()
-            plt.pause(0.01) 
+
 
             ### plt.suptitle(f'{r}/{df.shape[0]}, Speed = {this_speed} mps, Est CFO: {round(foffset_approximated,2)} Hz')                               
 
@@ -185,11 +232,16 @@ def plot_everyRXspectrum_VS_MTloc_1x2(fnm, df, routewas, this_exp_mtdata, summar
             # ax[2].set_xlabel("Time spent (s)")
             # ax[2].set_ylabel("Freq offset (Hz)")
 
-            if saveplots_flag:
-                plt.figure("psdVsloc").savefig(f"{runtime_plots_dir}" +"/"+f"{r}_{p}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
-            
+            if p==4:
+                if saveplots_flag:
+                    plt.figure("psdVsloc").savefig(f"{runtime_plots_dir}" +"/"+f"{r}_{p}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
+                else:
+                    plt.draw()
+                    plt.pause(0.01) 
+
     plt.ioff()
     plt.close()
+    my_plot_rms_dicts(fnm, rmsdict, runtime_plots_dir, runtime, saveplots_flag)
 
 if __name__ == "__main__":
 
@@ -199,7 +251,7 @@ if __name__ == "__main__":
     print('Your current working directory that has all pickle files is:', Path.cwd(), "\n")
     print("Time right now  = ", datetime.now().strftime("%H:%M:%S"))
 
-    PSDDATADIR = str(Path.cwd())+'/IQ_pickles_old_cfofunction_10152_finalv1'
+    PSDDATADIR = str(Path.cwd())+'/IQ_pickles_forGit_v2_10152_oldcfofunc_373highsnrKept_detournotyetfiltered'
     print('The directory of pickle files is:', PSDDATADIR, "\n")
 
     psd_tagged_files = list(sorted(Path(PSDDATADIR).rglob('*.pickle')))
@@ -207,7 +259,8 @@ if __name__ == "__main__":
 
 
     saveplots_flag = 0
-    overall_plots_dir = Path(PSDDATADIR+'/overall_plots')
+
+    overall_plots_dir = Path(PSDDATADIR+'/all_psds_plots')
     runtime = f'{int(time.time())}'
     print("current runtime is:", runtime)
 
@@ -235,18 +288,19 @@ if __name__ == "__main__":
         routewas = get_filtered_df_and_plot(fn, this_exp_df, plotflag =False) # from: mine_GPSlocs_plotting_function
         # print(f"Filtered length of this experiment data:", this_exp_df.shape[0])
 
-        plot_everyRXspectrum_VS_MTloc_1x2(fn, this_exp_df, routewas, this_exp_metadata, this_exp_cfos, overall_plots_dir, runtime, saveplots_flag) 
+        plot_everyRXspectrum_VS_MTloc_1x2(fn, this_exp_df, routewas, this_exp_metadata, this_exp_cfos, overall_plots_dir, runtime, saveplots_flag)
         ## concatenate
         one_totaldataset_df = pd.concat([one_totaldataset_df, this_exp_df])
-        totalrows += this_exp_df.shape[0]    
+        totalrows += this_exp_df.shape[0]  
+        # break  
         
         print("\nCurrently, the dataframe stacked with all data ====>", totalrows)
 
     print("\nFinally, the dataframe stacked with all data ====>",
           "\nfull_data_df shape:", one_totaldataset_df.shape, 
-          "\nfull_data_df column names:", one_totaldataset_df.columns, 
-          "\nfull_data_df example data label:", one_totaldataset_df.iloc[95,-1], 
-          "\nfull_data_df each data length:", one_totaldataset_df.iloc[95][0].shape) # print("length should be", 500*11+200+100+100+1500+499+499+365+495+475+50+156+162)
+          "\nfull_data_df column names:", one_totaldataset_df.columns.values, 
+          "\nExample sample of IQ data with label at 95th row:", one_totaldataset_df.iloc[95,-1], 
+          "\nEach IQ data is of vector size:", one_totaldataset_df.iloc[95][0].shape) # print("over number of rows should be", 500*11+200+100+100+1500+499+499+365+495+475+50+156+162????)
     
     print("Time now  = ", datetime.now().strftime("%H:%M:%S"))
     print("\n\n\nDONE!!!!\n\n")

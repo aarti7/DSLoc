@@ -114,7 +114,7 @@ def get_filtered_df_and_plot(name, df, plotflag =False):
         filtered_df = orange_detour(name, df, plotflag)
     
     print(" The filtered df's shape:", filtered_df.shape)
-    return routewas#, filtered_df        
+    return routewas#, filtered_df      inplace is set to true so not needed to return df spcficially, which saves from catching it later      
 
 
 
