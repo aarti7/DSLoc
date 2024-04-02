@@ -107,6 +107,7 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
             
             ##########################
             if len(this_measr_time) == 0:
+                # print(this_measr_time)
                 # print("AGAIN: no iq data rxd at this time for this column", p, "msrmnt=", n)
                 no_measr_time_idx_n.append(n)
 
@@ -136,7 +137,7 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
             
             ##########################
             if len(matched_row_ingt) == 0:
-                # print(f'somehow bus didnt record {n}th GPS measurment! for this row', n)
+                # print(f'AGAIN: somehow bus didnt record {n}th GPS measurment! for this row', n)
                 no_gps_mesrnt_idx_n.append(n)
 
                 '''
@@ -412,9 +413,9 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
     print("Number of moving measurements         ==", n_moving_msrmnts)
 
     print("\n\nNumber of >Unique< indexes to be missed are:", len(np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n)), "\n\n")
-    print("\n\n>Unique< indexes to be missed are:", np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n), "\n\n")
+    print("\n\n>new Unique< indexes to be missed are:", np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n), "\n\n")
 
-    # print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
+    print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
     
     print("\nStationary signal seen per RX", [len(value) for key, value in freqoff_dict.items() ]) 
     print("Stationary signal wasnt seen for RX", [key for key, value in freqoff_dict.items() if len(value) == 0]) 
@@ -523,9 +524,9 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
     ##########################
 
 
-    print("\n\nMethod0: Median freq offset  ==", medn_frqoff_perrx_dict, "\n")
-    print("Method1: Avg freq offset     ==", mean_frqoff_perrx_dict, "\n")
-    print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
+    # print("\n\nMethod0: Median freq offset  ==", medn_frqoff_perrx_dict, "\n")
+    # print("Method1: Avg freq offset     ==", mean_frqoff_perrx_dict, "\n")
+    # print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
     
 
 
@@ -588,6 +589,7 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
             ##########################
             if len(this_measr_time) == 0:
                 # print("AGAIN: no iq data rxd at this time for this column", p, "msrmnt=", n)
+                
                 no_measr_time_idx_n.append(n)
 
                 '''
@@ -616,7 +618,7 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
             
             ##########################
             if len(matched_row_ingt) == 0:
-                # print(f'somehow bus didnt record {n}th GPS measurment! for this row', n)
+                # print(f'AGAIN: somehow bus didnt record {n}th GPS measurment! for this row', n)
                 no_gps_mesrnt_idx_n.append(n)
 
                 '''
@@ -687,7 +689,7 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
     print("Number of moving measurements         ==", n_moving_msrmnts)
     
     print("\n\nNumber of >Unique< indexes to be missed are:", len(np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n)), "\n\n")
-    print("\n\n>Unique< indexes to be missed are:", np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n), "\n\n")
+    print("\n\n>old Unique< indexes to be missed are:", np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n), "\n\n")
 
     # print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
     print("\nStationary signal seen per RX", [len(value) for key, value in freqoff_dict.items() ]) 

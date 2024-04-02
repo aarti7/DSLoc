@@ -104,10 +104,10 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         print('\nOverall length of CSV', gt_loc_df.shape, "Max bus speed in this experiment was:", gt_loc_df['Speed (meters/sec)'].max())
     
 
-    to_filter_tothemax_or_not = 1 # For filtering the GPS CSV gt_loc_df, doing modified cfo, and get snr indexes!
-    to_plott = 1
+    to_filter_tothemax_or_not = 0 # For filtering the GPS CSV gt_loc_df, doing modified cfo, and get snr indexes!
+    to_plott = 0
 
-    # Not filtering the GPS CSV gt_loc_df anymore, but still doing modified cfo with snr indexes as to_filter_tothemax_or_not is set to 1 above
+    # # #### Not filtering the GPS CSV gt_loc_df anymore, but still doing modified cfo with snr indexes as to_filter_tothemax_or_not is set to 1 above
     # if to_filter_tothemax_or_not: 
     #     ##### to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
     #     to_filter_df_old_fomrat_3in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  (row['Lat'], row['Lon']) ], axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
@@ -181,7 +181,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ## 4 max speed value
         MAXIMUM_BUS_SPEED_POSSIBLE = args.maxspeed #21 # in meters_per_second
         print("Hardcoded value:","MAXIMUM_BUS_SPEED_POSSIBLE ==", MAXIMUM_BUS_SPEED_POSSIBLE)
-        
+        # 
         FD_MAXPOSSIBLE             = MAXIMUM_BUS_SPEED_POSSIBLE / WAVELENGTH
         print("FD_MAXPOSSIBLE is          == " , FD_MAXPOSSIBLE)
         
@@ -236,7 +236,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
     if to_plott:
         runtime = f'{int(time.time())}'
-        print("runtime is:", runtime)
+        # print("runtime is:", runtime)
 
         colnames_list  = df_allrx.columns.values 
         rmsdict =   {key: [] for key in colnames_list}
@@ -260,7 +260,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     ########### iterating dataframe to make pickles with (spectrum, label) 
     for n in range(0, n_total_measurements ):
 
-        if n in no_measr_time_idx_n_from_hdf5:
+        if n in no_measr_time_idx_n_from_hdf5 or n in no_gps_mesrnt_idx_n_from_cfo:
             print(f"{n}th measurment skipped cause its empty\n") # as this pth /all p msrmnts is missing! Neither should store or do labelling for those who are present")
             continue # but not exiting(breaking) the loop. Such that, will go to the next n
         
@@ -278,12 +278,12 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
             ## Get respective row from GT_LOC_CSV            
             matched_row_ingt = gt_loc_df[gt_loc_df['Time (UTC)'].str.contains(this_measr_timeuptoseconds)]           
             
-            ##########################
-            if len(matched_row_ingt) == 0:
-                nogpsgt+=1
-                print('Somehoww bus didnt record {n}th GPS measurment ground truth for this row', n, "so not storing!\n")
-                break # shouldnt go to the next p so no continue!
-                ##########################
+            # ##########################
+            # if len(matched_row_ingt) == 0:
+            #     nogpsgt+=1
+            #     print('Somehoww bus didnt record {n}th GPS measurment ground truth for this row', n, "so not storing!\n")
+            #     break # shouldnt go to the next p so no continue!
+            #     ##########################
             
             # Location - will be pickling!
             current_bus_pos_tuple = (matched_row_ingt['Lat'].values[0],matched_row_ingt['Lon'].values[0])
@@ -336,11 +336,11 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
 
 
             else: # old cfo method for uploading on git
-                # full spectrum 
+                ##### full spectrum 
                 [full_spectrum, freq_full]   = get_full_DS_spectrum(this_measurement, rate)
                 # print(full_spectrum[0], full_spectrum[-1])
                 
-                # narrowed frequency indexes 
+                ##### narrowed frequency indexes 
                 fdidx  = (freq_full >= -ns) & ( freq_full <= ns)             
                 # narrowed spectrum
                 data_and_label_dict[df_allrx.columns[p]].append(full_spectrum[fdidx]) # pickling!
@@ -444,11 +444,11 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     
 
 
-    print(f'\nSize of a single spectrum : {len(freq_full[fdidx])}')
+    # print(f'\nSize of a single spectrum : {len(freq_full[fdidx])}')
 
     final_totallength = [len(val) for k, val in enumerate(data_and_label_dict.values()) ]
     print("How many rows we got in this pickled data file", final_totallength)
-    print("Count of rows skipped",  len(no_measr_time_idx_n_from_hdf5) + nogpsgt if not to_filter_tothemax_or_not else  len(no_measr_time_idx_n_from_hdf5) + nogpsgt + len(high_SNR_n_list) )
+    print("Count of rows skipped",  len(no_measr_time_idx_n_from_hdf5) + len(no_gps_mesrnt_idx_n_from_cfo) if not to_filter_tothemax_or_not else  len(no_measr_time_idx_n_from_hdf5) + len(no_gps_mesrnt_idx_n_from_cfo) + len(high_SNR_n_list) )
     
     same_numb_rows = all(element == final_totallength[0] for element in final_totallength)   
     if same_numb_rows:
