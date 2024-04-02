@@ -115,7 +115,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     ### For doing modified cfo, and get snr indexes, and/or filtering the GPS CSV gt_loc_df
     ############################################
     
-    to_filter_tothemax_or_not =  0 # Flag to select what to store: PSD or IQ 
+    to_filter_tothemax_or_not = 0 # Flag to select what to store: PSD or IQ 
     
     ############################################
     
