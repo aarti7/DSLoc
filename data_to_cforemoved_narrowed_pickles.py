@@ -86,6 +86,12 @@ def read_leaves_to_DF(leaves, allsampsandtime):
 
 
 def do_data_storing(ff, attrs, allsampsandtime, leaves):
+    
+
+
+
+
+    ############################################
     fnm=f"{args.dirdata}".split('meas_')[1]
     ############################################
     
@@ -104,9 +110,29 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         print('\nOverall length of CSV', gt_loc_df.shape, "Max bus speed in this experiment was:", gt_loc_df['Speed (meters/sec)'].max())
     
 
-    to_filter_tothemax_or_not = 0 # For filtering the GPS CSV gt_loc_df, doing modified cfo, and get snr indexes!
-    to_plott = 0
 
+    ############################################
+    ### For doing modified cfo, and get snr indexes, and/or filtering the GPS CSV gt_loc_df
+    ############################################
+    
+    to_filter_tothemax_or_not =  0 # Flag to select what to store: PSD or IQ 
+    
+    ############################################
+    
+    to_plott = 1 # Flag to save the PSD/CFO/RMS plots 
+
+    nameofplotsfolder = "formyML_psdplots " if to_filter_tothemax_or_not else "forGIT_IQ_plots"     #"finalplots"  #"overall_plots"
+
+    overall_plots_dir = Path(args.dirdata+'/'+f'{nameofplotsfolder}')
+    if overall_plots_dir.exists():
+        shutil.rmtree(overall_plots_dir)
+    overall_plots_dir.mkdir(parents=True, exist_ok=False)
+    
+
+    runtime = f'{int(time.time())}'  # print("runtime is:", runtime)
+
+
+    ############################################
     # # #### Not filtering the GPS CSV gt_loc_df anymore, but still doing modified cfo with snr indexes as to_filter_tothemax_or_not is set to 1 above
     # if to_filter_tothemax_or_not: 
     #     ##### to_filter_df_new_format_4in1list = gt_loc_df.assign(latlontuple=gt_loc_df.apply(lambda row: [row['Speed (meters/sec)'], row['Track'],  row['Lat'], row['Lon'] ]   , axis=1)).drop(gt_loc_df.columns.tolist(), axis=1)
@@ -150,15 +176,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     pwr_threshold = args.pwrthrshld # in dB
     print("Hardcoded value:","threshold ==", pwr_threshold, "\n")
     
-
-    ############################################
-
-    nametothefolder = "formyML_psdplots"#"finalplots"  #"overall_plots"
-    overall_plots_dir = Path(args.dirdata+'/'+f'{nametothefolder}')
-    if overall_plots_dir.exists():
-        shutil.rmtree(overall_plots_dir)
-    overall_plots_dir.mkdir(parents=True, exist_ok=False)
-
+    
     ############################################
     cfo_summary_dict = {}
     CFO_REMOVE_FLAG=args.ofstremove
@@ -206,7 +224,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
             ### OLD!
             cfo_mthd = 'old_db'
             cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo = get_cfo(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting)
-            ## plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -235,8 +253,6 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     ######################################################################################################################################
 
     if to_plott:
-        runtime = f'{int(time.time())}'
-        # print("runtime is:", runtime)
 
         colnames_list  = df_allrx.columns.values 
         rmsdict =   {key: [] for key in colnames_list}
@@ -456,7 +472,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         nofrows = np.unique(final_totallength)
         
         #### Store one pickle file for one hdf5 data file in the common directory
-        fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+'.pickle'
+        fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+f'runtime_{runtime}'+'.pickle'
         pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
         print("\n\nPickled!", end="")
         
@@ -633,7 +649,7 @@ if __name__ == "__main__":
             metadata_dict, cfo_summary_dict, datalabel_dict, nofrws = do_data_storing(ff, needed_attrs_obj, commonANDdeepest_root_foralltxrx, leaves_withTX if args.treebranch =='wtx' else leaves_withoutTX) #all_leaves_2) # leaves_withTX)
             
             totalrows += nofrws 
-            # break   
+            break   
 
     print(f"\n\nAll {NumberofDatafolders} data folders in the common data directory {args.dircommon} done! Total valid rows collected = {totalrows}\n\n")
     
