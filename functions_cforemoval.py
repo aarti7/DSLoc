@@ -364,8 +364,8 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
                         # fig,ax=plt.subplots(num="db20"); plt.plot(freqs, result_fft_db, 'r-', label=f'{n}{df_allrx.columns[p][9:12]}'); plt.axhline(y = np.mean(result_fft_db[(freqs >= -lpf_fc) & ( freqs <= lpf_fc)]), color = 'g', linestyle = '--', label='narw mean' ); plt.axhline(y = pwr_threshold, color = 'b', linestyle = '--', label='fpk pwr thrs'); plt.plot( freqs[listofidxsofresult_db], 10*np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_db], 'k>', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_db)}'); plt.grid(True); plt.legend(loc='upper left');  plt.show(); plt.xlim(-lpf_fc, lpf_fc); plt.draw(); plt.pause(1); 
                         # fig,ax=plt.subplots(num="db2"); plt.axhline(y = np.mean(result_fft_db), label='full mean', color = 'm', linestyle = '--');
 
-                        fig,ax=plt.subplots(num="high_SNR"); plt.plot(freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_db], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_db], 'go', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_db)}'); plt.axhline(y = np.mean(result_fft_db[(freqs >= -lpf_fc) & ( freqs <= lpf_fc)]), color = 'g', linestyle = '--', label='narw mean' ); plt.axhline(y = pwr_threshold, color = 'b', linestyle = '--', label='fpk pwr thrs');  plt.legend(loc='upper left'); plt.grid(True); plt.xlim(-lpf_fc, lpf_fc); plt.ylim(-60, 10);  plt.draw();# pdb.set_trace()
-                        plt.figure("high_SNR").savefig(f"{overall_plots_dir}" +"/"+f"{fn}"+f'_{n}_broke_out_for_{p}_{cfo_mthd}'+"_highsnr.pdf",format='pdf')
+                        # fig,ax=plt.subplots(num="high_SNR"); plt.plot(freqs, 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0])))), 'r-', freqs[listofidxsofresult_db], 10.0 * np.log10(np.nan_to_num(np.square(np.abs(get_full_DS_spectrum(mylpf(df_allrx.iloc[n,p], fsr, lpf_fc), fsr)[0]))))[listofidxsofresult_db], 'go', label=f'{n}{df_allrx.columns[p][9:12]}\n#Peaks: {len(listofidxsofresult_db)}'); plt.axhline(y = np.mean(result_fft_db[(freqs >= -lpf_fc) & ( freqs <= lpf_fc)]), color = 'g', linestyle = '--', label='narw mean' ); plt.axhline(y = pwr_threshold, color = 'b', linestyle = '--', label='fpk pwr thrs');  plt.legend(loc='upper left'); plt.grid(True); plt.xlim(-lpf_fc, lpf_fc); plt.ylim(-60, 10);  plt.draw();# pdb.set_trace()
+                        # plt.figure("high_SNR").savefig(f"{overall_plots_dir}" +"/"+f"{fn}"+f'_{n}_broke_out_for_{p}_{cfo_mthd}'+"_highsnr.pdf",format='pdf')
                         
                         break
                     
@@ -410,11 +410,15 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
 
     print("\nNumber of stationary measurements     ==", n_stationary_msrmnts)
     print("Number of moving measurements         ==", n_moving_msrmnts)
-    print("Unique indexes to be missed are:", len(np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n)))
 
-    print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
+    print("\n\nNumber of >Unique< indexes to be missed are:", len(np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n)), "\n\n")
+    print("\n\n>Unique< indexes to be missed are:", np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n), "\n\n")
+
+    # print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
+    
     print("\nStationary signal seen per RX", [len(value) for key, value in freqoff_dict.items() ]) 
     print("Stationary signal wasnt seen for RX", [key for key, value in freqoff_dict.items() if len(value) == 0]) 
+    
     # print("Freq offsets when no motion", freqoff_dict,"\n")
 
 
@@ -519,9 +523,9 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
     ##########################
 
 
-    print("\n\nMethod0: Median freq offset  ==", medn_frqoff_perrx_dict, "\n")
-    print("Method1: Avg freq offset     ==", mean_frqoff_perrx_dict, "\n")
-    print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
+    # print("\n\nMethod0: Median freq offset  ==", medn_frqoff_perrx_dict, "\n")
+    # print("Method1: Avg freq offset     ==", mean_frqoff_perrx_dict, "\n")
+    # print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
     
 
 
@@ -681,9 +685,11 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
     
     print("\nNumber of stationary measurements     ==", n_stationary_msrmnts)
     print("Number of moving measurements         ==", n_moving_msrmnts)
-    print("Unique indexes to be missed are:", len(np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n)))
+    
+    print("\n\nNumber of >Unique< indexes to be missed are:", len(np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n)), "\n\n")
+    print("\n\n>Unique< indexes to be missed are:", np.unique(no_measr_time_idx_n + no_gps_mesrnt_idx_n), "\n\n")
 
-    print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
+    # print("\nMISSED measurements!\n","1. due to missed TIME or waitres", no_measr_time_idx_n, "\n2. due to missed GPS", no_gps_mesrnt_idx_n)    
     print("\nStationary signal seen per RX", [len(value) for key, value in freqoff_dict.items() ]) 
     print("Stationary signal wasnt seen for RX", [key for key, value in freqoff_dict.items() if len(value) == 0]) 
     # print("Freq offsets when no motion", freqoff_dict,"\n")
@@ -771,9 +777,9 @@ def get_cfo(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampU
     ##########################
 
 
-    print("\n\nMethod0: Median freq offset  ==", medn_frqoff_perrx_dict, "\n")
-    print("Method1: Avg freq offset     ==", mean_frqoff_perrx_dict, "\n")
-    print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
+    # print("\n\nMethod0: Median freq offset  ==", medn_frqoff_perrx_dict, "\n")
+    # print("Method1: Avg freq offset     ==", mean_frqoff_perrx_dict, "\n")
+    # print(f"Method2: Polyfit parameters fr degree = {degreeforfitting} are ==\n", fitd_frqoff_perrx_dict, "\n")
     
 
  
