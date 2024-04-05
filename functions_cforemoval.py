@@ -531,6 +531,7 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
 
 
     summary_cfo_dict = {
+    'n_moving_msrmnts' : n_moving_msrmnts,
     'pwr_threshold': pwr_threshold ,
     'degreeforfitting': degreeforfitting,
     'exp_start_timestampUTC': exp_start_timestampUTC,
@@ -544,7 +545,7 @@ def get_cfo_either_lin_or_db_pwr(fn, df_allrx, df_allti, gt_loc_df, fsr, lpf_fc,
 
     print("high_SNR_n_list", fn, high_SNR_n_list)
     # plot_all_off_dictionaries()
-    return summary_cfo_dict, no_measr_time_idx_n, no_gps_mesrnt_idx_n, high_SNR_n_list
+    return summary_cfo_dict, no_measr_time_idx_n, no_gps_mesrnt_idx_n, high_SNR_n_list, n_moving_msrmnts
 
 
 

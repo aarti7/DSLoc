@@ -86,10 +86,26 @@ def read_leaves_to_DF(leaves, allsampsandtime):
 
 
 def do_data_storing(ff, attrs, allsampsandtime, leaves):
-    
+    """
+    B. Two important flags to check before running this script. These flags are hardcoded into the script so can only be changed first reading within the script.
+        1.  to_filter_tothemax_or_not:  Flag to select what to store: PSD or IQ 
+        
+        2. to_plott = 1: Flag to save the PSD/CFO/RMS plots 
+            2a)
 
+            2b)RMS dict and plots can be created iff this flag=True. 
+            >RMSdict has this format: list of 6 values [nth_rms, nth_speed, nth_timstamp, nth_lat, nth_long, nth_distto_pthBS ] for each nth_obs at each pth_BS.
+            >RMSdict is not saved on as pkl files.
+            >RMSvalues are plotted on psd plots as a patch.
+            >RMS functions are not shared for others.
 
+    C. This functions takes:
 
+    D. This functions stores:
+
+    D. This function returns:
+
+    """
 
     ############################################
     fnm=f"{args.dirdata}".split('meas_')[1]
@@ -217,7 +233,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         ### NEW! keeping! using db option, almost same number of rows as old! but getting the high_SNR_n_list so keeping this one! 
         if to_filter_tothemax_or_not: 
             cfo_mthd = 'new_db' # new_lin
-            cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo, high_SNR_n_list = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
+            cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo, high_SNR_n_list, n_moving_msrmnts = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
             plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
 
         else:
@@ -446,7 +462,7 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 # plt.draw()
                 # plt.pause(0.01) 
                 
-                plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
+                # plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
                          
 
         print("Rows traversed: %i/%i" %(n+1, n_total_measurements), end='\r')
@@ -457,6 +473,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         plt.ioff()
         plt.close("psdVsloc")
         my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
+        pdb.set_trace()
+        my_3d_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
     
 
 
@@ -592,6 +610,14 @@ def parse_args_definition():
     return parser #not parsing them here, so not doing parser.parse_args()!
 
 if __name__ == "__main__":
+
+
+    
+    """
+    A. This script is run by this command:
+    python ~/Documents/DopplerSpreadLocalization/data_to_cforemoved_narrowed_pickles.py -l 10000 -o 1
+
+    """
     
 
     print("Start time = ", datetime.now().strftime("%H:%M:%S"))

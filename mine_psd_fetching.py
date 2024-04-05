@@ -170,7 +170,7 @@ def get_filtered_df_and_plot(name, df, plotflag =False):
         filtered_df = orange_detour(name, df, plotflag)
     
     print(" The filtered df's shape:", filtered_df.shape)
-    return routewas # filtered_df        
+    return routewas # filtered_df     # inplace is set to true so not needed to return df spcficially, which saves from catching it later    
 
 
 
@@ -217,6 +217,54 @@ def rmsfunction(psd_db_ns, psd_linear_ns, freqs_ns, PWR_THRESHOLD):#, FD_MAXPOSS
     rmsis_entire = getrmsFreq(psd_linear_ns, freqs_ns)
     rmsis_thrsld = getrmsFreq(psd_linear_ns[psd_linear_ns > max_noise_power_linear], freqs_ns[psd_linear_ns > max_noise_power_linear])
     return rmsis_thrsld #, max_noise_power_db
+
+
+
+
+def my_3d_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
+    
+    for uu, kvp in enumerate(rmsdict.items()):
+        if len(kvp[1]) !=0 and kvp[0].split('-')[1] =='ustar':
+            rms_df_d = pd.DataFrame()
+            rms_df_d = pd.DataFrame(kvp[1]).apply(lambda x: pd.Series(x) )  
+
+            # zero speed mask!!
+            # rms_df_d = rms_df_d[rms_df_d[0] != 0] # df_onlynonzero = rms_df_d[rms_df_d[0] != 0] 
+            # print("before", len(df_onlynonzero))
+
+            fig3d, ax3d = plt.subplots(figsize=(8,5),subplot_kw=dict(projection='3d'), num='3drms')
+      
+            cmap_option =  "tab10" # "Blues"
+            norm = plt.Normalize(rms_df_d.iloc[:,1].min(), rms_df_d.iloc[:,1].max()) # [:,1] is speed
+            sm = plt.cm.ScalarMappable(cmap=cmap_option, norm=norm)
+            sm.set_array([])
+
+            cbr_speed = fig3d.colorbar(sm, ax=ax3d) # ax3d.get_legend().remove()
+            cbr_speed.set_label('Speed')
+
+            # Area
+            axsl = ax3d.scatter(rms_df_d.iloc[:,4],rms_df_d.iloc[:,3], -10, marker='.', s=50, alpha=1, c='black', label="locs")
+            axsb = ax3d.bar3d(all_BS_coords[kvp[0].split('-')[1]][1],all_BS_coords[kvp[0].split('-')[1]][0], -10, .0001, .0001, 80, color='k', label=f'{kvp[0]}'.split('-')[1])
+            axsb._facecolors2d=axsb._facecolor3d
+            axsb._edgecolors2d=axsb._edgecolors
+
+            # Data
+            axsd= ax3d.scatter(rms_df_d.iloc[:,4],rms_df_d.iloc[:,3],rms_df_d.iloc[:,0], s=np.array(rms_df_d.iloc[:,0]*20), c=rms_df_d.iloc[:,1], edgecolor='k', cmap=cmap_option, alpha=0.5, label="rms")        
+            # sns.scatterplot(x= rms_df_d.iloc[:,3],y= rms_df_d.iloc[:,2], size= rms_df_d.iloc[:,0], sizes=(1,2000), hue=rms_df_d.iloc[:,1], edgecolor='k', palette='cmap_option', alpha=0.5, data=rms_df_d)
+            
+            ax3d.set_xlabel("Long")
+            ax3d.set_ylabel("Lat")
+            ax3d.set_zlabel("RMS Doppler Spread (Hz)")
+            ax3d.grid(True)               
+            plt.tight_layout()
+            plt.legend()
+            print("RMS 3d plots saved!")
+            ax3d.view_init(elev=1, azim=-110)
+            plt.show()
+    
+    plt.figure("3drms").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rms3d.svg",format='svg', dpi=1200) #.pdf",format='pdf')
+    pdb.set_trace()
+    plt.close("3drms")
 
 def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
     print(" you cant comapre the rms for two fifferent bs cause they arent calibrated")
