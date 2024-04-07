@@ -98,6 +98,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
             >RMSdict is not saved on as pkl files.
             >RMSvalues are plotted on psd plots as a patch.
             >RMS functions are not shared for others.
+        3. Meh~~~ to_store_flag  # flag to (re)save the plots and dicts!
+            > Running out of disk space and existential patience to resave the plots! so put a flag for now!
 
     C. This functions takes:
 
@@ -108,6 +110,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     """
 
     ############################################
+    runtime = f'{int(time.time())}'  # print("runtime is:", runtime)
+
     fnm=f"{args.dirdata}".split('meas_')[1]
     ############################################
     
@@ -135,17 +139,17 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     
     ############################################
     
-    to_plott = 1 # Flag to save the PSD/CFO/RMS plots 
+    to_plott = 1 # Flag to plot and render/show the PSD/CFO/RMS plots 
+
+    to_store_flag = 1 # flag to (re)save the plots and dicts!
+
+    # if to_store_flag:Cant do this cause plt_dict_function asks for dir always!! unless you wanna plot_dicts after the psd_pkl iterations, along with rmsplots!
 
     nameofplotsfolder = "formyML_psdplots " if to_filter_tothemax_or_not else "forGIT_IQ_plots"     #"finalplots"  #"overall_plots"
-
-    overall_plots_dir = Path(args.dirdata+'/'+f'{nameofplotsfolder}')
-    if overall_plots_dir.exists():
-        shutil.rmtree(overall_plots_dir)
+    overall_plots_dir = Path(args.dirdata+'/'+f'{nameofplotsfolder}'+'/'+f"{runtime}")
     overall_plots_dir.mkdir(parents=True, exist_ok=False)
     
 
-    runtime = f'{int(time.time())}'  # print("runtime is:", runtime)
 
 
     ############################################
@@ -234,13 +238,13 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         if to_filter_tothemax_or_not: 
             cfo_mthd = 'new_db' # new_lin
             cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo, high_SNR_n_list, n_moving_msrmnts = get_cfo_either_lin_or_db_pwr(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting, cfo_mthd, overall_plots_dir)
-            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict, f'{runtime}', degreeforfitting , cfo_mthd, overall_plots_dir, to_store_flag)
 
         else:
             ### OLD!
             cfo_mthd = 'old_db'
             cfo_summary_dict, no_measr_time_idx_n_from_cfo, no_gps_mesrnt_idx_n_from_cfo = get_cfo(fnm, df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, pwr_threshold, degreeforfitting)
-            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{int(time.time())}', degreeforfitting , cfo_mthd, overall_plots_dir)
+            plot_all_off_dictionaries(ff, fnm, cfo_summary_dict,  f'{runtime}', degreeforfitting , cfo_mthd, overall_plots_dir, to_store_flag)
     
     ######################################################################################################################################
     ######################################################################################################################################
@@ -462,7 +466,8 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
                 # plt.draw()
                 # plt.pause(0.01) 
                 
-                # plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
+                # if to_store_flag:
+                    # plt.figure("psdVsloc").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{n}_{fnm}_"+"psdVsloc.svg",format='svg', dpi=1200)  #.pdf",format='pdf')
                          
 
         print("Rows traversed: %i/%i" %(n+1, n_total_measurements), end='\r')
@@ -472,9 +477,10 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
     if to_plott:
         plt.ioff()
         plt.close("psdVsloc")
-        my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
-        pdb.set_trace()
-        my_3d_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
+        
+        if to_store_flag:
+            my_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
+            my_3d_plot_rms_dicts(fnm,rmsdict,overall_plots_dir, runtime)
     
 
 
@@ -490,9 +496,10 @@ def do_data_storing(ff, attrs, allsampsandtime, leaves):
         nofrows = np.unique(final_totallength)
         
         #### Store one pickle file for one hdf5 data file in the common directory
-        fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+f'runtime_{runtime}'+'.pickle'
-        pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
-        print("\n\nPickled!", end="")
+        fn = f"{args.dircommon}"+"/"+ f"{args.dirdata}".split('/')[-1]+'.pickle' #+f'runtime_{runtime}'
+        if to_store_flag:
+            pkl.dump((data_and_label_dict, metadata_dict, cfo_summary_dict), open(fn, 'wb' ) )
+            print("\n\nPickled!", end="")
         
         print("\n\n\n\n-----------------------------------------------------------\n\n\n\n")
         return metadata_dict, cfo_summary_dict, data_and_label_dict, nofrows

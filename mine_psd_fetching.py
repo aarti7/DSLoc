@@ -221,15 +221,24 @@ def rmsfunction(psd_db_ns, psd_linear_ns, freqs_ns, PWR_THRESHOLD):#, FD_MAXPOSS
 
 
 
-def my_3d_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
+def my_3d_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime, to_store_flag=1):
     
     for uu, kvp in enumerate(rmsdict.items()):
         if len(kvp[1]) !=0 and kvp[0].split('-')[1] =='ustar':
             rms_df_d = pd.DataFrame()
-            rms_df_d = pd.DataFrame(kvp[1]).apply(lambda x: pd.Series(x) )  
+            rms_df_d = pd.DataFrame(kvp[1]).apply(lambda x: pd.Series(x) ) 
+            
+            ''' UTM change'''
+            #  (latitude, longitude) converts to the form (EASTING, NORTHING, ZONE_NUMBER, ZONE_LETTER): https://github.com/Turbo87/utm
+            
+            rms_df_d[['UTM_Easting', 'UTM_Northing']] = rms_df_d.apply(lambda row: utm.from_latlon(row[3], row[4])[:2], axis=1, result_type='expand') # last flag is to put results into separate columns
+            #### apply UTM on BS locs
+            BS_coords_df = pd.DataFrame(all_BS_coords.values(), columns=['Latitude', 'Longitude'], index=all_BS_coords.keys())
+            BS_coords_df[['UTM_Easting', 'UTM_Northing']] = pd.DataFrame(BS_coords_df.apply(lambda row: utm.from_latlon(row['Latitude'], row['Longitude'] )[:2] , axis=1, result_type='expand'))
 
             # zero speed mask!!
-            # rms_df_d = rms_df_d[rms_df_d[0] != 0] # df_onlynonzero = rms_df_d[rms_df_d[0] != 0] 
+            rms_df_d = rms_df_d[rms_df_d[0] != 0] # df_onlynonzero = rms_df_d[rms_df_d[0] != 0] 
+            bsheight = rms_df_d.iloc[:,0].nlargest(1)
             # print("before", len(df_onlynonzero))
 
             fig3d, ax3d = plt.subplots(figsize=(8,5),subplot_kw=dict(projection='3d'), num='3drms')
@@ -240,33 +249,72 @@ def my_3d_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
             sm.set_array([])
 
             cbr_speed = fig3d.colorbar(sm, ax=ax3d) # ax3d.get_legend().remove()
-            cbr_speed.set_label('Speed')
+            cbr_speed.set_label('Speed (mps)')
 
-            # Area
-            axsl = ax3d.scatter(rms_df_d.iloc[:,4],rms_df_d.iloc[:,3], -10, marker='.', s=50, alpha=1, c='black', label="locs")
-            axsb = ax3d.bar3d(all_BS_coords[kvp[0].split('-')[1]][1],all_BS_coords[kvp[0].split('-')[1]][0], -10, .0001, .0001, 80, color='k', label=f'{kvp[0]}'.split('-')[1])
+            # # Area
+            # axsl = ax3d.scatter(rms_df_d.iloc[:,4], rms_df_d.iloc[:,3], -10, marker='.', s=50, alpha=1, c='black', label="locs")
+            # axsb = ax3d.bar3d( all_BS_coords[kvp[0].split('-')[1]][1],all_BS_coords[kvp[0].split('-')[1]][0], -10, .0001, .0001, 80, color='k', label=f'{kvp[0]}'.split('-')[1])
+            # axsb._facecolors2d=axsb._facecolor3d
+            # axsb._edgecolors2d=axsb._edgecolors
+
+            # # Data
+            # axsd= ax3d.scatter(rms_df_d.iloc[:,4],rms_df_d.iloc[:,3],rms_df_d.iloc[:,0], s=np.array(rms_df_d.iloc[:,0]*20), c=rms_df_d.iloc[:,1], edgecolor='k', cmap=cmap_option, alpha=0.5, label="rms")        
+            # # sns.scatterplot(x= rms_df_d.iloc[:,3],y= rms_df_d.iloc[:,2], size= rms_df_d.iloc[:,0], sizes=(1,2000), hue=rms_df_d.iloc[:,1], edgecolor='k', palette='cmap_option', alpha=0.5, data=rms_df_d)
+            
+            # ax3d.set_xlabel("GPS Longitude")
+            # ax3d.set_ylabel("GPS Latitude")
+
+
+
+            '''utm scatters '''
+            # utm Area
+            axsl = ax3d.scatter(rms_df_d['UTM_Easting'], rms_df_d['UTM_Northing'] -1, marker='.', s=50, alpha=1, c='black', label="Locs")
+            axsb = ax3d.bar3d(BS_coords_df.loc['ustar'][2], BS_coords_df.loc['ustar'][3], -1, 20, 20, bsheight/2, color='b', label="BS: "+f':{kvp[0]}'.split('-')[1])
             axsb._facecolors2d=axsb._facecolor3d
             axsb._edgecolors2d=axsb._edgecolors
 
-            # Data
-            axsd= ax3d.scatter(rms_df_d.iloc[:,4],rms_df_d.iloc[:,3],rms_df_d.iloc[:,0], s=np.array(rms_df_d.iloc[:,0]*20), c=rms_df_d.iloc[:,1], edgecolor='k', cmap=cmap_option, alpha=0.5, label="rms")        
+            # utm Data
+            axsd= ax3d.scatter(rms_df_d['UTM_Easting'], rms_df_d['UTM_Northing'],rms_df_d.iloc[:,0], s=np.array(rms_df_d.iloc[:,0]*20), c=rms_df_d.iloc[:,1], edgecolor='k', cmap=cmap_option, alpha=0.5, label="RMS")        
             # sns.scatterplot(x= rms_df_d.iloc[:,3],y= rms_df_d.iloc[:,2], size= rms_df_d.iloc[:,0], sizes=(1,2000), hue=rms_df_d.iloc[:,1], edgecolor='k', palette='cmap_option', alpha=0.5, data=rms_df_d)
-            
-            ax3d.set_xlabel("Long")
-            ax3d.set_ylabel("Lat")
+    
+
+            xlbs = [i- ax3d.get_xticks()[0] for i in ax3d.get_xticks() ]
+            ax3d.set_xticklabels(xlbs)
+            ylbs = [i- ax3d.get_yticks()[0] for i in ax3d.get_yticks() ]
+            ax3d.set_yticklabels(ylbs)
+
+            ax3d.set_ylabel("UTM Northing (m)")
+            ax3d.set_xlabel("UTM Easting (m)")
             ax3d.set_zlabel("RMS Doppler Spread (Hz)")
+            ax3d.zaxis.set_rotate_label(False)
+
             ax3d.grid(True)               
             plt.tight_layout()
             plt.legend()
-            print("RMS 3d plots saved!")
-            ax3d.view_init(elev=1, azim=-110)
-            plt.show()
-    
-    plt.figure("3drms").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rms3d.svg",format='svg', dpi=1200) #.pdf",format='pdf')
-    pdb.set_trace()
+
+    if to_store_flag:
+
+        #top
+        ax3d.view_init(elev=60, azim=-90.5)
+        ax3d.set_box_aspect([4, 4, 1], zoom =1.25)
+        ax3d.set_zlabel("RMS Doppler Spread \n (Hz)", rotation=90)
+        plt.figure("3drms").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rms3d_top.svg",format='svg', dpi=1200) #.pdf",format='pdf')
+
+        # front
+        ax3d.view_init(elev=1, azim=-110)
+        ax3d.set_box_aspect([4, 2, 4], zoom =1.25)
+
+        ax3d.set_zlabel("RMS Doppler Spread (Hz)", rotation=90)
+        ax3d.tick_params(axis='y', rotation=35)
+
+        plt.figure("3drms").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rms3d_front.svg",format='svg', dpi=1200) #.pdf",format='pdf')
+        print("RMS 3d plots saved!")
+        
+    else:
+        plt.show()
     plt.close("3drms")
 
-def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
+def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime, to_store_flag=1):
     print(" you cant comapre the rms for two fifferent bs cause they arent calibrated")
     
     fig_rmsall, axs_rmsall = plt.subplots(figsize=(6,4), num = "rmsall")
@@ -284,13 +332,18 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
             df_onlynonzero = df_onlynonzero[df_onlynonzero[0] < maxx] # zero speed mask!!
             # print("after",len(df_onlynonzero), f'{kvp[0]}'.split('-')[1])
             axs_rmsall.scatter(df_onlynonzero.iloc[:,1], df_onlynonzero.iloc[:,0], c='C{}'.format(uu), label = f'{kvp[0]}'.split('-')[1] )
-    plt.xlabel('Speed(mps)')
+    
+    plt.xlabel('Speed (mps)')
     plt.grid(True)
     plt.legend(loc="upper left")
     plt.ylabel('RMS Doppler Spread (Hz)')
     plt.tight_layout()
-    print("RMS plots saved!")
-    plt.figure("rmsall").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rmsall.svg",format='svg', dpi=1200) #.pdf",format='pdf')
+    
+    if to_store_flag:
+        plt.figure("rmsall").savefig(f"{overall_plots_dir}" +"/"+f"{runtime}_{fnm}"+"_rmsall.svg",format='svg', dpi=1200) #.pdf",format='pdf')
+        print("RMS 2d plots saved!")
+    else:
+        plt.show()
     plt.close("rmsall")    
 
 
@@ -327,7 +380,7 @@ def my_plot_rms_dicts(fnm, rmsdict, overall_plots_dir, runtime):
 
 
 
-def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, runtime, degreeforfitting, cfo_mthd, overall_plots_dir):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
+def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, runtime, degreeforfitting, cfo_mthd, overall_plots_dir, to_store_flag=1):           # freqoff_time_dict, mean_frqoff_perrx_dict, exp_start_timestampUTC): #freqoff_dict, freqoff_dist_dict,
     marker_list=["o","s","P","^","*","x"]
 
     mean_frqoff_perrx_dict      = summary_cfo_dict['meanmethod']
@@ -400,19 +453,24 @@ def plot_all_off_dictionaries(ff, fn, summary_cfo_dict, runtime, degreeforfittin
 
 
     bb = np.round(np.linspace(0, max(times), 10 ), 2)
-    plt.xticks(bb, bb,  rotation=90)
+    plt.xticks(bb, bb) #,  rotation=90)
     plt.legend()
     plt.xlabel(f"Elapsed time (hours) during dataset {ds_numbr_is} collected on date {fn.split('_')[0]}.")#+f' D{ff}') 
     plt.ylabel("Frequency offset (Hz)")
     plt.grid(alpha=0.7)
     plt.tight_layout()
-    print("\nCFO plots saved!\n")
-    # plt.show()
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
-    plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200) 
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
-    # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
+    
+    if to_store_flag:
+
+        # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.pdf",format='pdf')
+        plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.svg",format='svg', dpi=1200) 
+        # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=1000)
+        # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps",format='eps', dpi=1200)
+        # plt.figure("ZeroSpeedOffset_overtime_allBSin1").savefig(f"{overall_plots_dir}" +"/"+f"{ds_numbr_is}_{fn}"+f'_{cfo_mthd}_'+f'{int(time.time())}'+"_ZeroSpeedOffset_overtime_allBSin1.eps", dpi=800)
+        print("\nCFO plots saved!\n")
+    
+    else:
+        plt.show()
     plt.close("ZeroSpeedOffset_overtime_allBSin1")
     
 
