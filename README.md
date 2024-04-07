@@ -24,10 +24,23 @@ piping issues: measurements dropped.
 More robust signal reception.
 -->
 
+### Install the required packages:
+
+1. Following python packages needs to be installed: 
+	* numpy 
+	* pandas 
+	* scipy
+	* h5py
+	* pytz
+	* matplotlib
+	* utm
+	
+2.  To install the above packages, open the terminal and run: `pip install -r requirements.txt`.
+
 
 
 ### Hdf5 to pandas dataframe conversion
-* How to run the python script: Go to the repository storing the folders <run '' > Each repo must have the files produced by SHOUT!
+*  Go to the repository storing the folders <run '' > Each repo must have the files produced by SHOUT!
 
 * List of functions:
  * Currently used functions:	
