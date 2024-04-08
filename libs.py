@@ -33,7 +33,6 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 import math
 
-import shutil
 
 ## 4/5 ML ###############################################################
 
