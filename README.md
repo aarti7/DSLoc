@@ -1,4 +1,4 @@
-# Doppler spread based localization
+# Doppler spread based localization 
 We implement the following strategy for generating the fingerprint database `F`. 
 
 We perform a series of large-scale, over-the- air experiments on the POWDER platform. In total `N=5` base-stations ( namely Behavioral, Honors, Hospital, SMT, UStar) are utilized.  
