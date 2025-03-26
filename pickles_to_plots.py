@@ -11,7 +11,7 @@
 # Version 1.0:  Initial Release. 20 Jan 2024
 # Version 2.0:  Initial Release. 30 Mar 2024
 
-#
+
 
 from libs import * 
 from GPSlocs_plotting_functions import *
@@ -259,6 +259,8 @@ if __name__ == "__main__":
 
 
     saveplots_flag = 0
+    plotLocations_flag = 0
+    pdb.set_trace()
 
     overall_plots_dir = Path(PSDDATADIR+'/all_psds_plots')
     runtime = f'{int(time.time())}'
@@ -284,8 +286,9 @@ if __name__ == "__main__":
         this_exp_data = loaded_data[0]
         this_exp_df   =  pd.DataFrame(this_exp_data)
         # print(f"\nOriginal length of this experiment data: {this_exp_df.shape[0]}")
+        
         ## Detour fix: Will reduce the size of the df! **AND** plot if plotflag=True
-        routewas = get_filtered_df_and_plot(fn, this_exp_df, plotflag =False) # from: mine_GPSlocs_plotting_function
+        routewas = get_filtered_df_and_plot(fn, this_exp_df, plotflag = plotLocations_flag )# plotflag = False) # from: mine_GPSlocs_plotting_function
         # print(f"Filtered length of this experiment data:", this_exp_df.shape[0])
 
         plot_everyRXspectrum_VS_MTloc_1x2(fn, this_exp_df, routewas, this_exp_metadata, this_exp_cfos, overall_plots_dir, runtime, saveplots_flag)

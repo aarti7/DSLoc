@@ -25,18 +25,20 @@ DEF_HDF5BRANCH = "wtx"
 MEAS_ROOT      = "saveiq_w_tx"
 
 ## HARDCODED VALUE
-FRQ_CUTOFF     = 1e4 #in hz 
+FRQ_CUTOFF     = 1e4 #in hz ## This is because the maximum offset between the local oscillator crystals at the bus and at the base-stations is upto 10khz.
 
 ###############################################################
 ###############################################################  
 
 CFO_REMOVE_FLAG  = 0
 MPLOT_FLAG       = 0 
-PWR_THRESHOLD     = -19 #in dB
-DEGREE_OF_POLYFIT = 3
 
-BUFFER_WINDOW     = 1e2 #in hz
-MAXIMUM_BUS_SPEED = 21  #in mps
+
+PWR_THRESHOLD     = -19 #in dB  ## Was observed from the experiments.
+DEGREE_OF_POLYFIT = 3           ## Was observed from the experiments.
+
+BUFFER_WINDOW     = 1e2 #in hz  ## Was assumed.
+MAXIMUM_BUS_SPEED = 21  #in mps ## Was assumed due to road/route restrictions for campus bus. 
     
 
 ######################################## Read hdf5 tree ########
@@ -127,13 +129,13 @@ def do_data_storing(attrs, allsampsandtime, leaves):
     2. Dict#2 has the metadata of this one experiment's hdf5 file that was in the data_dir. ( name of bus transmitter, number of samples collected, sampling rate, center frequency, limit set for max_plus_buffer_expected_Doppler_frequency, timestamp of the start of the experiment,) 
 
      
-    Dict#1 format:
+    Dict#2 format:
     {
     "tx" : txis,
     "nsamps" : nsamps,
     "rate" : rate, 
     "tx_CENTER_FREQUENCY" : tx_CENTER_FREQUENCY,
-    "narrow_spectrum":ns,
+    "narrow_spectrum" : ns,
     "exp_datetime" : datetime.datetime.fromtimestamp(int(exp_timestampUTC)).astimezone( pytz.timezone("America/Denver")) #.strftime("%Y-%m-%d %H:%M:%S")
     }
     
@@ -234,7 +236,7 @@ def do_data_storing(attrs, allsampsandtime, leaves):
         ##lengthy df traversal 1 to get cfo ###################################################################
         
         ### calling the function for cfo calculation #############################
-        cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(df_allrx, df_allti, gt_loc_df, rate, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold)
+        cfo_summary_dict, no_measr_time_idx_n2, no_gps_mesrnt_idx_n2 = get_cfo(df_allrx, df_allti, gt_loc_df, exp_start_timestampUTC, rate, lpf_fc, degreeforfitting, pwr_threshold)
 
     
     ######################################################################################################################################
@@ -366,14 +368,14 @@ def parse_args_definition():
     parser.add_argument("-f", "--hdf5name",   type=str, default=DEF_HDF5NAME,  help="The name of the HDF5 format data file. Default: %s" % DEF_HDF5NAME)
     parser.add_argument("-t", "--treebranch", type=str, default=DEF_HDF5BRANCH,help="Must specify which branch (wtx or wotx) on the hdf5 tree to traverse. Default: %s" % DEF_HDF5BRANCH)
 
-    parser.add_argument("-l", "--frqcutoff",  type=int, default=FRQ_CUTOFF,    help="The name of the per experiment directory. Default: %s" % FRQ_CUTOFF)
-    parser.add_argument("-o", "--ofstremove", type=int, default=CFO_REMOVE_FLAG,    help="Must specify which branch (wtx or wotx) on the hdf5 tree to traverse. Default: %s" % CFO_REMOVE_FLAG)
-    parser.add_argument("-m", "--mpltflag",   type=int, default=MPLOT_FLAG,    help="The name of the per experiment directory. Default: %s" % MPLOT_FLAG)
+    parser.add_argument("-l", "--frqcutoff",  type=int, default=FRQ_CUTOFF,    help="The cutoff frequency for LPF . Default: %s" % FRQ_CUTOFF)
+    parser.add_argument("-o", "--ofstremove", type=int, default=CFO_REMOVE_FLAG,help="Whether(==1) or not(==0) to remove the CFO and shift the spectrum. Default: %s" % CFO_REMOVE_FLAG)
+    parser.add_argument("-m", "--mpltflag",   type=int, default=MPLOT_FLAG,    help="Whether(==1) or not(==0) to plot the data AFTER pickles are made. Default: %s" % MPLOT_FLAG)
     
-    parser.add_argument("-p", "--pwrthrshld", type=int, default=PWR_THRESHOLD,    help="The name of the HDF5 format data file. Default: %s" % PWR_THRESHOLD)
-    parser.add_argument("-s", "--maxspeed",   type=int, default=MAXIMUM_BUS_SPEED,help="Must specify which branch (wtx or wotx) on the hdf5 tree to traverse. Default: %s" % MAXIMUM_BUS_SPEED)
-    parser.add_argument("-e", "--degoffit",   type=int, default=DEGREE_OF_POLYFIT,help="The name of the HDF5 format data file. Default: %s" % DEGREE_OF_POLYFIT)
-    parser.add_argument("-w", "--window",     type=int, default=BUFFER_WINDOW,    help="Must specify which branch (wtx or wotx) on the hdf5 tree to traverse. Default: %s" % BUFFER_WINDOW)
+    parser.add_argument("-p", "--pwrthrshld", type=int, default=PWR_THRESHOLD,    help="The power threshold above which is considered 'seen'. Default: %s" % PWR_THRESHOLD)
+    parser.add_argument("-s", "--maxspeed",   type=int, default=MAXIMUM_BUS_SPEED,help="Maximum speed of the bus in the campus environment. Default: %s" % MAXIMUM_BUS_SPEED)
+    parser.add_argument("-e", "--degoffit",   type=int, default=DEGREE_OF_POLYFIT,help="The degree of line that is to fit on the CFO varying over time. Default: %s" % DEGREE_OF_POLYFIT)
+    parser.add_argument("-w", "--window",     type=int, default=BUFFER_WINDOW,    help="Additional buffer frequency to include in the final spectrum. Default: %s" % BUFFER_WINDOW)
 
     
     return parser #not parsing them here, so not doing parser.parse_args()!
@@ -397,6 +399,7 @@ if __name__ == "__main__":
         if f.is_dir() and str(f).startswith('Shout_'):
 
             args = parser_itself.parse_args(['--dirdata', str(f) ]) #update the argument here!            
+            
             args.frqcutoff = args_old.frqcutoff
             args.ofstremove = args_old.ofstremove            
             args.mpltflag = args_old.mpltflag
@@ -406,7 +409,8 @@ if __name__ == "__main__":
             args.degoffit = args_old.degoffit
             args.window = args_old.window
 
-            print(f"\n\n-----------------------------------------------------------\nProcessing the data in the {args.dirdata} directory\n")
+            print(f"\n\n-----------------------------------------------------------\nProcessing the data in the {args.dirdata} experiment directory\n")
+            
             dsfile = h5py.File("%s/%s" % (args.dirdata, args.hdf5name), "r")
             dsfile_with_meas_root = dsfile[MEAS_ROOT]
             all_leaves_2 = get_dataset_keys(dsfile_with_meas_root)
@@ -433,6 +437,7 @@ if __name__ == "__main__":
     
 
     print("Time now  = ", datetime.now().strftime("%H:%M:%S"))
+    
     if args.mpltflag:
         exec(open("pickles_to_spectrum_postprocessing.py").read()) 
 

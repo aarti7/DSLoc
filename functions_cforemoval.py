@@ -70,11 +70,11 @@ def mylpf(this_measurement, fsr, fc):
     res = sig.convolve(this_measurement, LPF, mode='same')
     return res
     
-def get_cfo(df_allrx, df_allti, gt_loc_df, fsr, lpf_fc, exp_start_timestampUTC, degreeforfitting, pwr_threshold):
+def get_cfo(df_allrx, df_allti, gt_loc_df, exp_start_timestampUTC, fsr, lpf_fc, degreeforfitting, pwr_threshold):
     
     """
     Description: 
-    Requirement:  
+    Requirement: Two dataframes, named 'df_allrx', 'df_allti', each of size (N_numberofiqvalues x M_numberofRxs), having, respectively, the IQ data collected at each recievers and the timestamp of data collection. Ground truth CSV file of the bus. Rest of the metadata and constants from experiments
     Output:  
     """
 
